@@ -1,233 +1,338 @@
 <?php
-//cek session
+// Check session
 if (empty($_SESSION['admin'])) {
     $_SESSION['err'] = '<center>Anda harus login terlebih dahulu!</center>';
     header("Location: ./");
-    die();
+    exit();
+}
+
+// Handle form submission or display form
+if (isset($_REQUEST['submit'])) {
+    handleUserCreation();
 } else {
-    if (isset($_REQUEST['submit'])) {
+    displayUserCreationForm();
+}
 
-        //validasi form kosong
-        if ($_REQUEST['username'] == "" || $_REQUEST['password'] == "" || $_REQUEST['nama'] == "" || $_REQUEST['nip'] == "" || $_REQUEST['admin'] == "") {
-            $_SESSION['errEmpty'] = 'ERROR! Semua form wajib diisi!';
-            header("Location: ./admin.php?page=sett&sub=usr&act=add");
-            die();
+/**
+ * Handle user creation process
+ */
+function handleUserCreation()
+{
+    // Validate required fields
+    if (!add_validateRequiredFields()) {
+        $_SESSION['errEmpty'] = 'ERROR! Semua form wajib diisi!';
+        header("Location: ./admin.php?page=sett&sub=usr&act=add");
+        exit();
+    }
+
+    // Validate input data
+    $validationResult = validateUserData();
+    if (!$validationResult['success']) {
+        foreach ($validationResult['errors'] as $sessionKey => $errorMessage) {
+            $_SESSION[$sessionKey] = $errorMessage;
+        }
+        header("Location: ./admin.php?page=sett&sub=usr&act=add");
+        exit();
+    }
+
+    // Create new user
+    if (createNewUser()) {
+        $_SESSION['succAdd'] = 'SUKSES! User baru berhasil ditambahkan';
+        header("Location: ./admin.php?page=sett&sub=usr");
+        exit();
+    } else {
+        $_SESSION['errQ'] = 'ERROR! Ada masalah dengan query';
+        header("Location: ./admin.php?page=sett&sub=usr&act=add");
+        exit();
+    }
+}
+
+/**
+ * Validate required fields
+ */
+function add_validateRequiredFields()
+{
+    $requiredFields = ['username', 'password', 'nama', 'nip', 'admin'];
+
+    foreach ($requiredFields as $field) {
+        if (empty($_REQUEST[$field])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
+ * Validate user data
+ */
+function validateUserData()
+{
+    global $config;
+
+    $validationRules = [
+        'username' => [
+            'pattern' => "/^[a-zA-Z0-9_]*$/",
+            'error' => 'uname',
+            'message' => 'Form Username hanya boleh mengandung karakter huruf, angka dan underscore (_)'
+        ],
+        'nama' => [
+            'pattern' => "/^[a-zA-Z., ]*$/",
+            'error' => 'namauser',
+            'message' => 'Form Nama hanya boleh mengandung karakter huruf, spasi, titik(.) dan koma(,)'
+        ],
+        'nip' => [
+            'pattern' => "/^[0-9. -]*$/",
+            'error' => 'nipuser',
+            'message' => 'Form NIP hanya boleh mengandung karakter angka, spasi dan minus(-)'
+        ],
+        'admin' => [
+            'pattern' => "/^[2-3]$/",
+            'error' => 'tipeuser',
+            'message' => 'Form Tipe User hanya boleh mengandung karakter angka 2 atau 3'
+        ]
+    ];
+
+    $errors = [];
+
+    // Validate field patterns
+    foreach ($validationRules as $field => $rule) {
+        if (!preg_match($rule['pattern'], $_REQUEST[$field])) {
+            $errors[$rule['error']] = $rule['message'];
+        }
+    }
+
+    // Check if username already exists
+    $username = mysqli_real_escape_string($config, $_REQUEST['username']);
+    $cek = mysqli_query($config, "SELECT * FROM tbl_user WHERE username='$username'");
+    if (mysqli_num_rows($cek) > 0) {
+        $errors['errUsername'] = 'Username sudah terpakai, gunakan yang lain!';
+    }
+
+    // Validate username length
+    if (strlen($_REQUEST['username']) < 5) {
+        $errors['errUser5'] = 'Username minimal 5 karakter!';
+    }
+
+    // Validate password length
+    if (strlen($_REQUEST['password']) < 5) {
+        $errors['errPassword'] = 'Password minimal 5 karakter!';
+    }
+
+    return [
+        'success' => empty($errors),
+        'errors' => $errors
+    ];
+}
+
+/**
+ * Create new user in database
+ */
+function createNewUser()
+{
+    global $config;
+
+    // Sanitize input data
+    $username = mysqli_real_escape_string($config, $_REQUEST['username']);
+    $password = mysqli_real_escape_string($config, $_REQUEST['password']);
+    $nama = mysqli_real_escape_string($config, $_REQUEST['nama']);
+    $nip = mysqli_real_escape_string($config, $_REQUEST['nip']);
+    $admin = mysqli_real_escape_string($config, $_REQUEST['admin']);
+
+    // Insert new user
+    $query = mysqli_query($config, "INSERT INTO tbl_user(username, password, nama, nip, admin) 
+                                   VALUES('$username', MD5('$password'), '$nama', '$nip', '$admin')");
+
+    return $query;
+}
+
+/**
+ * Display user creation form
+ */
+function displayUserCreationForm()
+{
+    echo add_renderHeader();
+    add_displayAlertMessages();
+    echo renderUserForm();
+}
+
+/**
+ * Render page header
+ */
+function add_renderHeader()
+{
+    return '<!-- Row Start -->
+            <div class="row">
+                <!-- Secondary Nav START -->
+                <div class="col s12">
+                    <nav class="secondary-nav">
+                        <div class="nav-wrapper blue-grey darken-1">
+                            <ul class="left">
+                                <li class="waves-effect waves-light">
+                                    <a href="?page=sett&sub=usr&act=add" class="judul">
+                                        <i class="material-icons">person_add</i> Tambah User
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </nav>
+                </div>
+                <!-- Secondary Nav END -->
+            </div>
+            <!-- Row END -->';
+}
+
+/**
+ * Display alert messages
+ */
+function add_displayAlertMessages()
+{
+    $alertTypes = [
+        'errQ' => 'red',
+        'errEmpty' => 'red'
+    ];
+
+    foreach ($alertTypes as $sessionKey => $color) {
+        if (isset($_SESSION[$sessionKey])) {
+            echo '<div id="alert-message" class="row">
+                    <div class="col m12">
+                        <div class="card ' . $color . ' lighten-5">
+                            <div class="card-content notif">
+                                <span class="card-title ' . $color . '-text">
+                                    <i class="material-icons md-36">clear</i> '
+                . htmlspecialchars($_SESSION[$sessionKey]) . '
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>';
+            unset($_SESSION[$sessionKey]);
+        }
+    }
+}
+
+/**
+ * Render user creation form
+ */
+function renderUserForm()
+{
+    return '<!-- Row form Start -->
+            <div class="row jarak-form">
+                <!-- Form START -->
+                <form class="col s12" method="post" action="?page=sett&sub=usr&act=add">
+                    <!-- Row in form START -->
+                    <div class="row">
+                        ' . add_renderFormFields() . '
+                    </div>
+                    <!-- Row in form END -->
+                    <br />
+                    ' . add_renderFormButtons() . '
+                </form>
+                <!-- Form END -->
+            </div>
+            <!-- Row form END -->';
+}
+
+/**
+ * Render form fields
+ */
+function add_renderFormFields()
+{
+    $fields = [
+        [
+            'name' => 'username',
+            'label' => 'Username',
+            'icon' => 'account_circle',
+            'type' => 'text',
+            'error_keys' => ['uname', 'errUsername', 'errUser5']
+        ],
+        [
+            'name' => 'nama',
+            'label' => 'Nama',
+            'icon' => 'text_fields',
+            'type' => 'text',
+            'error_keys' => ['namauser']
+        ],
+        [
+            'name' => 'password',
+            'label' => 'Password',
+            'icon' => 'lock',
+            'type' => 'password',
+            'error_keys' => ['errPassword']
+        ],
+        [
+            'name' => 'nip',
+            'label' => 'NIP',
+            'icon' => 'looks_one',
+            'type' => 'text',
+            'error_keys' => ['nipuser']
+        ],
+        [
+            'name' => 'admin',
+            'label' => 'Pilih Tipe User',
+            'icon' => 'supervisor_account',
+            'type' => 'select',
+            'options' => [
+                '3' => 'User Biasa',
+                '2' => 'Administrator'
+            ],
+            'error_keys' => ['tipeuser']
+        ]
+    ];
+
+    $html = '';
+    foreach ($fields as $field) {
+        $html .= '<div class="input-field col s6">';
+
+        if ($field['type'] === 'select') {
+            $html .= '<i class="material-icons prefix md-prefix">' . $field['icon'] . '</i>
+                      <label>' . $field['label'] . '</label><br />
+                      <div class="input-field col s11 right">
+                          <select class="browser-default validate" name="' . $field['name'] . '" id="' . $field['name'] . '" required>';
+
+            foreach ($field['options'] as $value => $label) {
+                $html .= '<option value="' . $value . '">' . $label . '</option>';
+            }
+
+            $html .= '</select>
+                      </div>';
         } else {
+            $html .= '<i class="material-icons prefix md-prefix">' . $field['icon'] . '</i>
+                      <input id="' . $field['name'] . '" type="' . $field['type'] . '" 
+                             class="validate" name="' . $field['name'] . '" required>
+                      <label for="' . $field['name'] . '">' . $field['label'] . '</label>';
+        }
 
-            $username = $_REQUEST['username'];
-            $password = $_REQUEST['password'];
-            $nama = $_REQUEST['nama'];
-            $nip = $_REQUEST['nip'];
-            $admin = $_REQUEST['admin'];
-
-            //validasi input data
-            if (!preg_match("/^[a-zA-Z0-9_]*$/", $username)) {
-                $_SESSION['uname'] = 'Form Username hanya boleh mengandung karakter huruf, angka dan underscore (_)';
-                echo '<script language="javascript">window.history.back();</script>';
-            } else {
-
-                if (!preg_match("/^[a-zA-Z., ]*$/", $nama)) {
-                    $_SESSION['namauser'] = 'Form Nama hanya boleh mengandung karakter huruf, spasi, titik(.) dan koma(,)';
-                    echo '<script language="javascript">window.history.back();</script>';
-                } else {
-
-                    if (!preg_match("/^[0-9. -]*$/", $nip)) {
-                        $_SESSION['nipuser'] = 'Form NIP hanya boleh mengandung karakter angka, spasi dan minus(-)';
-                        echo '<script language="javascript">window.history.back();</script>';
-                    } else {
-
-                        if (!preg_match("/^[2-3]*$/", $admin)) {
-                            $_SESSION['tipeuser'] = 'Form Tipe User hanya boleh mengandung karakter angka 2 atau 3';
-                            echo '<script language="javascript">window.history.back();</script>';
-                        } else {
-
-                            $cek = mysqli_query($config, "SELECT * FROM tbl_user WHERE username='$username'");
-                            $result = mysqli_num_rows($cek);
-
-                            if ($result > 0) {
-                                $_SESSION['errUsername'] = 'Username sudah terpakai, gunakan yang lain!';
-                                echo '<script language="javascript">window.history.back();</script>';
-                            } else {
-
-                                if (strlen($username) < 5) {
-                                    $_SESSION['errUser5'] = 'Username minimal 5 karakter!';
-                                    echo '<script language="javascript">window.history.back();</script>';
-                                } else {
-
-                                    if (strlen($password) < 5) {
-                                        $_SESSION['errPassword'] = 'Password minimal 5 karakter!';
-                                        echo '<script language="javascript">window.history.back();</script>';
-                                    } else {
-
-                                        $query = mysqli_query($config, "INSERT INTO tbl_user(username,password,nama,nip,admin) VALUES('$username',MD5('$password'),'$nama','$nip','$admin')");
-
-                                        if ($query != false) {
-                                            $_SESSION['succAdd'] = 'SUKSES! User baru berhasil ditambahkan';
-                                            header("Location: ./admin.php?page=sett&sub=usr");
-                                            die();
-                                        } else {
-                                            $_SESSION['errQ'] = 'ERROR! Ada masalah dengan query';
-                                            echo '<script language="javascript">window.history.back();</script>';
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+        // Display errors
+        foreach ($field['error_keys'] as $errorKey) {
+            if (isset($_SESSION[$errorKey])) {
+                $html .= '<div id="alert-message" class="callout bottom z-depth-1 red lighten-4 red-text">'
+                    . htmlspecialchars($_SESSION[$errorKey]) . '</div>';
+                unset($_SESSION[$errorKey]);
             }
         }
-    } else { ?>
 
-        <!-- Row Start -->
-        <div class="row">
-            <!-- Secondary Nav START -->
-            <div class="col s12">
-                <nav class="secondary-nav">
-                    <div class="nav-wrapper blue-grey darken-1">
-                        <ul class="left">
-                            <li class="waves-effect waves-light"><a href="?page=sett&sub=usr&act=add" class="judul"><i
-                                        class="material-icons">person_add</i> Tambah User</a></li>
-                        </ul>
-                    </div>
-                </nav>
-            </div>
-            <!-- Secondary Nav END -->
-        </div>
-        <!-- Row END -->
-
-        <?php
-        if (isset($_SESSION['errQ'])) {
-            $errQ = $_SESSION['errQ'];
-            echo '<div id="alert-message" class="row">
-                            <div class="col m12">
-                                <div class="card red lighten-5">
-                                    <div class="card-content notif">
-                                        <span class="card-title red-text"><i class="material-icons md-36">clear</i> ' . $errQ . '</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>';
-            unset($_SESSION['errQ']);
-        }
-        if (isset($_SESSION['errEmpty'])) {
-            $errEmpty = $_SESSION['errEmpty'];
-            echo '<div id="alert-message" class="row">
-                            <div class="col m12">
-                                <div class="card red lighten-5">
-                                    <div class="card-content notif">
-                                        <span class="card-title red-text"><i class="material-icons md-36">clear</i> ' . $errEmpty . '</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>';
-            unset($_SESSION['errEmpty']);
-        }
-        ?>
-
-        <!-- Row form Start -->
-        <div class="row jarak-form">
-
-            <!-- Form START -->
-            <form class="col s12" method="post" action="?page=sett&sub=usr&act=add">
-
-                <!-- Row in form START -->
-                <div class="row">
-                    <div class="input-field col s6">
-                        <i class="material-icons prefix md-prefix">account_circle</i>
-                        <input id="username" type="text" class="validate" name="username" required>
-                        <?php
-                        if (isset($_SESSION['uname'])) {
-                            $uname = $_SESSION['uname'];
-                            echo '<div id="alert-message" class="callout bottom z-depth-1 red lighten-4 red-text">' . $uname . '</div>';
-                            unset($_SESSION['uname']);
-                        }
-                        if (isset($_SESSION['errUsername'])) {
-                            $errUsername = $_SESSION['errUsername'];
-                            echo '<div id="alert-message" class="callout bottom z-depth-1 red lighten-4 red-text">' . $errUsername . '</div>';
-                            unset($_SESSION['errUsername']);
-                        }
-                        if (isset($_SESSION['errUser5'])) {
-                            $errUser5 = $_SESSION['errUser5'];
-                            echo '<div id="alert-message" class="callout bottom z-depth-1 red lighten-4 red-text">' . $errUser5 . '</div>';
-                            unset($_SESSION['errUser5']);
-                        }
-                        ?>
-                        <label for="username">Username</label>
-                    </div>
-                    <div class="input-field col s6">
-                        <i class="material-icons prefix md-prefix">text_fields</i>
-                        <input id="nama" type="text" class="validate" name="nama" required>
-                        <?php
-                        if (isset($_SESSION['namauser'])) {
-                            $namauser = $_SESSION['namauser'];
-                            echo '<div id="alert-message" class="callout bottom z-depth-1 red lighten-4 red-text">' . $namauser . '</div>';
-                            unset($_SESSION['namauser']);
-                        }
-                        ?>
-                        <label for="nama">Nama</label>
-                    </div>
-                    <div class="input-field col s6">
-                        <i class="material-icons prefix md-prefix">lock</i>
-                        <input id="password" type="password" class="validate" name="password" required>
-                        <?php
-                        if (isset($_SESSION['errPassword'])) {
-                            $errPassword = $_SESSION['errPassword'];
-                            echo '<div id="alert-message" class="callout bottom z-depth-1 red lighten-4 red-text">' . $errPassword . '</div>';
-                            unset($_SESSION['errPassword']);
-                        }
-                        ?>
-                        <label for="password">Password</label>
-                    </div>
-                    <div class="input-field col s6">
-                        <i class="material-icons prefix md-prefix">looks_one</i>
-                        <input id="nip" type="text" class="validate" name="nip" required>
-                        <?php
-                        if (isset($_SESSION['nipuser'])) {
-                            $nipuser = $_SESSION['nipuser'];
-                            echo '<div id="alert-message" class="callout bottom z-depth-1 red lighten-4 red-text">' . $nipuser . '</div>';
-                            unset($_SESSION['nipuser']);
-                        }
-                        ?>
-                        <label for="nip">NIP</label>
-                    </div>
-                    <div class="input-field col s6">
-                        <i class="material-icons prefix md-prefix">supervisor_account</i><label>Pilih Tipe User</label><br />
-                        <div class="input-field col s11 right">
-                            <select class="browser-default validate" name="admin" id="admin" required>
-                                <option value="3">User Biasa</option>
-                                <option value="2">Administrator</option>
-                            </select>
-                        </div>
-                        <?php
-                        if (isset($_SESSION['tipeuser'])) {
-                            $tipeuser = $_SESSION['tipeuser'];
-                            echo '<div id="alert-message" class="callout bottom z-depth-1 red lighten-4 red-text">' . $tipeuser . '</div>';
-                            unset($_SESSION['tipeuser']);
-                        }
-                        ?>
-                    </div>
-                </div>
-                <br />
-                <!-- Row in form END -->
-                <div class="row">
-                    <div class="col 6">
-                        <button type="submit" name="submit" class="btn-large blue waves-effect waves-light">SIMPAN <i
-                                class="material-icons">done</i></button>
-                    </div>
-                    <div class="col 6">
-                        <a href="?page=sett&sub=usr" class="btn-large deep-orange waves-effect waves-light">BATAL <i
-                                class="material-icons">clear</i></a>
-                    </div>
-                </div>
-
-            </form>
-            <!-- Form END -->
-
-        </div>
-        <!-- Row form END -->
-
-        <?php
+        $html .= '</div>';
     }
+
+    return $html;
+}
+
+/**
+ * Render form buttons
+ */
+function add_renderFormButtons()
+{
+    return '<div class="row">
+                <div class="col 6">
+                    <button type="submit" name="submit" class="btn-large blue waves-effect waves-light">
+                        SIMPAN <i class="material-icons">done</i>
+                    </button>
+                </div>
+                <div class="col 6">
+                    <a href="?page=sett&sub=usr" class="btn-large deep-orange waves-effect waves-light">
+                        BATAL <i class="material-icons">clear</i>
+                    </a>
+                </div>
+            </div>';
 }
 ?>

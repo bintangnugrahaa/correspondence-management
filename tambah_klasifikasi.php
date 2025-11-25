@@ -1,187 +1,316 @@
 <?php
-//cek session
+// Check session and authorization
 if (empty($_SESSION['admin'])) {
     $_SESSION['err'] = '<center>Anda harus login terlebih dahulu!</center>';
     header("Location: ./");
-    die();
+    exit();
+}
+
+if (!in_array($_SESSION['admin'], [1, 2])) {
+    echo '<script language="javascript">
+            window.alert("ERROR! Anda tidak memiliki hak akses untuk menambahkan data");
+            window.location.href="./admin.php?page=ref";
+          </script>';
+    exit();
+}
+
+// Handle form submission or display form
+if (isset($_REQUEST['submit'])) {
+    handleKlasifikasiCreation();
 } else {
+    displayKlasifikasiCreationForm();
+}
 
-    if ($_SESSION['admin'] != 1 AND $_SESSION['admin'] != 2) {
-        echo '<script language="javascript">
-                    window.alert("ERROR! Anda tidak memiliki hak akses untuk menambahkan data");
-                    window.location.href="./admin.php?page=ref";
-                  </script>';
+/**
+ * Handle klasifikasi creation process
+ */
+function handleKlasifikasiCreation()
+{
+    global $config;
+
+    // Validate required fields
+    if (!validateRequiredFields()) {
+        $_SESSION['errEmpty'] = 'ERROR! Semua form wajib diisi';
+        header("Location: ./admin.php?page=ref&act=add");
+        exit();
+    }
+
+    // Validate input data
+    $validationResult = validateKlasifikasiData();
+    if (!$validationResult['success']) {
+        foreach ($validationResult['errors'] as $sessionKey => $errorMessage) {
+            $_SESSION[$sessionKey] = $errorMessage;
+        }
+        header("Location: ./admin.php?page=ref&act=add");
+        exit();
+    }
+
+    // Check for duplicate kode
+    if (isKodeDuplicate($_REQUEST['kode'])) {
+        $_SESSION['duplikasi'] = 'Kode sudah ada, pilih yang lainnya!';
+        header("Location: ./admin.php?page=ref&act=add");
+        exit();
+    }
+
+    // Create new klasifikasi
+    if (createKlasifikasi()) {
+        $_SESSION['succAdd'] = 'SUKSES! Data berhasil ditambahkan';
+        header("Location: ./admin.php?page=ref");
+        exit();
     } else {
+        $_SESSION['errQ'] = 'ERROR! Ada masalah dengan query';
+        header("Location: ./admin.php?page=ref&act=add");
+        exit();
+    }
+}
 
-        if (isset($_REQUEST['submit'])) {
+/**
+ * Validate required fields
+ */
+function validateRequiredFields()
+{
+    $requiredFields = ['kode', 'nama', 'uraian'];
 
-            //validasi form kosong
-            if ($_REQUEST['kode'] == "" || $_REQUEST['nama'] == "" || $_REQUEST['uraian'] == "") {
-                $_SESSION['errEmpty'] = 'ERROR! Semua form wajib diisi';
-                echo '<script language="javascript">window.history.back();</script>';
-            } else {
+    foreach ($requiredFields as $field) {
+        if (empty($_REQUEST[$field])) {
+            return false;
+        }
+    }
+    return true;
+}
 
-                $kode = $_REQUEST['kode'];
-                $nama = $_REQUEST['nama'];
-                $uraian = $_REQUEST['uraian'];
-                $id_user = $_SESSION['admin'];
+/**
+ * Validate klasifikasi data
+ */
+function validateKlasifikasiData()
+{
+    $validationRules = [
+        'kode' => [
+            'pattern' => "/^[a-zA-Z0-9. ]*$/",
+            'error' => 'kode',
+            'message' => 'Form Kode hanya boleh mengandung karakter huruf, angka, spasi dan titik(.)'
+        ],
+        'nama' => [
+            'pattern' => "/^[a-zA-Z0-9.,\/ -]*$/",
+            'error' => 'namaref',
+            'message' => 'Form Nama hanya boleh mengandung karakter huruf, spasi, titik(.), koma(,) dan minus(-)'
+        ],
+        'uraian' => [
+            'pattern' => "/^[a-zA-Z0-9.,()\/\r\n -]*$/",
+            'error' => 'uraian',
+            'message' => 'Form Uraian hanya boleh mengandung karakter huruf, angka, spasi, titik(.), koma(,), minus(-), garis miring(/), dan kurung()'
+        ]
+    ];
 
-                //validasi input data
-                if (!preg_match("/^[a-zA-Z0-9. ]*$/", $kode)) {
-                    $_SESSION['kode'] = 'Form Kode hanya boleh mengandung karakter huruf, angka, spasi dan titik(.)';
-                    echo '<script language="javascript">window.history.back();</script>';
-                } else {
+    $errors = [];
 
-                    if (!preg_match("/^[a-zA-Z0-9.,\/ -]*$/", $nama)) {
-                        $_SESSION['namaref'] = 'Form Nama hanya boleh mengandung karakter huruf, spasi, titik(.), koma(,) dan minus(-)';
-                        echo '<script language="javascript">window.history.back();</script>';
-                    } else {
+    foreach ($validationRules as $field => $rule) {
+        if (!preg_match($rule['pattern'], $_REQUEST[$field])) {
+            $errors[$rule['error']] = $rule['message'];
+        }
+    }
 
-                        if (!preg_match("/^[a-zA-Z0-9.,()\/\r\n -]*$/", $uraian)) {
-                            $_SESSION['uraian'] = 'Form Uraian hanya boleh mengandung karakter huruf, angka, spasi, titik(.), koma(,), minus(-), garis miring(/), dan kurung()';
-                            echo '<script language="javascript">window.history.back();</script>';
-                        } else {
+    return [
+        'success' => empty($errors),
+        'errors' => $errors
+    ];
+}
 
-                            $cek = mysqli_query($config, "SELECT * FROM tbl_klasifikasi WHERE kode='$kode'");
-                            $result = mysqli_num_rows($cek);
+/**
+ * Check if kode already exists
+ */
+function isKodeDuplicate($kode)
+{
+    global $config;
 
-                            if ($result > 0) {
-                                $_SESSION['duplikasi'] = 'Kode sudah ada, pilih yang lainnya!';
-                                echo '<script language="javascript">window.history.back();</script>';
-                            } else {
+    $kode = mysqli_real_escape_string($config, $kode);
+    $cek = mysqli_query($config, "SELECT * FROM tbl_klasifikasi WHERE kode='$kode'");
 
-                                $query = mysqli_query($config, "INSERT INTO tbl_klasifikasi(kode,nama,uraian,id_user) VALUES('$kode','$nama','$uraian','$id_user')");
+    return mysqli_num_rows($cek) > 0;
+}
 
-                                if ($query != false) {
-                                    $_SESSION['succAdd'] = 'SUKSES! Data berhasil ditambahkan';
-                                    header("Location: ./admin.php?page=ref");
-                                    die();
-                                } else {
-                                    $_SESSION['errQ'] = 'ERROR! Ada masalah dengan query';
-                                    echo '<script language="javascript">window.history.back();</script>';
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } else { ?>
-            <!-- Row Start -->
+/**
+ * Create new klasifikasi in database
+ */
+function createKlasifikasi()
+{
+    global $config;
+
+    // Sanitize input data
+    $kode = mysqli_real_escape_string($config, $_REQUEST['kode']);
+    $nama = mysqli_real_escape_string($config, $_REQUEST['nama']);
+    $uraian = mysqli_real_escape_string($config, $_REQUEST['uraian']);
+    $id_user = $_SESSION['admin'];
+
+    $query = mysqli_query($config, "INSERT INTO tbl_klasifikasi(kode, nama, uraian, id_user) 
+                                   VALUES('$kode', '$nama', '$uraian', '$id_user')");
+
+    return $query;
+}
+
+/**
+ * Display klasifikasi creation form
+ */
+function displayKlasifikasiCreationForm()
+{
+    echo add_renderHeader();
+    add_displayAlertMessages();
+    echo renderKlasifikasiForm();
+}
+
+/**
+ * Render page header
+ */
+function add_renderHeader()
+{
+    return '<!-- Row Start -->
             <div class="row">
                 <!-- Secondary Nav START -->
                 <div class="col s12">
                     <nav class="secondary-nav">
                         <div class="nav-wrapper blue-grey darken-1">
                             <ul class="left">
-                                <li class="waves-effect waves-light"><a href="?page=ref&act=add" class="judul"><i
-                                            class="material-icons">bookmark</i> Tambah Klasifikasi Surat</a></li>
+                                <li class="waves-effect waves-light">
+                                    <a href="?page=ref&act=add" class="judul">
+                                        <i class="material-icons">bookmark</i> Tambah Klasifikasi Surat
+                                    </a>
+                                </li>
                             </ul>
                         </div>
                     </nav>
                 </div>
                 <!-- Secondary Nav END -->
             </div>
-            <!-- Row END -->
+            <!-- Row END -->';
+}
 
-            <?php
-            if (isset($_SESSION['errQ'])) {
-                $errQ = $_SESSION['errQ'];
-                echo '<div id="alert-message" class="row">
-                                <div class="col m12">
-                                    <div class="card red lighten-5">
-                                        <div class="card-content notif">
-                                            <span class="card-title red-text"><i class="material-icons md-36">clear</i> ' . $errQ . '</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>';
-                unset($_SESSION['errQ']);
-            }
-            if (isset($_SESSION['errEmpty'])) {
-                $errEmpty = $_SESSION['errEmpty'];
-                echo '<div id="alert-message" class="row">
-                                <div class="col m12">
-                                    <div class="card red lighten-5">
-                                        <div class="card-content notif">
-                                            <span class="card-title red-text"><i class="material-icons md-36">clear</i> ' . $errEmpty . '</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>';
-                unset($_SESSION['errEmpty']);
-            }
-            ?>
+/**
+ * Display alert messages
+ */
+function add_displayAlertMessages()
+{
+    $alertTypes = [
+        'errQ' => 'red',
+        'errEmpty' => 'red'
+    ];
 
-            <!-- Row form Start -->
-            <div class="row jarak-form">
-
-                <!-- Form START -->
-                <form class="col s12" method="post" action="?page=ref&act=add">
-
-                    <!-- Row in form START -->
-                    <div class="row">
-                        <div class="input-field col s3">
-                            <i class="material-icons prefix md-prefix">font_download</i>
-                            <input id="kd" type="text" class="validate" maxlength="30" name="kode" required>
-                            <?php
-                            if (isset($_SESSION['kode'])) {
-                                $kode = $_SESSION['kode'];
-                                echo '<div id="alert-message" class="callout bottom z-depth-1 red lighten-4 red-text">' . $kode . '</div>';
-                                unset($_SESSION['kode']);
-                            }
-                            if (isset($_SESSION['duplikasi'])) {
-                                $duplikasi = $_SESSION['duplikasi'];
-                                echo '<div id="alert-message" class="callout bottom z-depth-1 red lighten-4 red-text">' . $duplikasi . '</div>';
-                                unset($_SESSION['duplikasi']);
-                            }
-                            ?>
-                            <label for="kd">Kode</label>
-                        </div>
-                        <div class="input-field col s9">
-                            <i class="material-icons prefix md-prefix">text_fields</i>
-                            <input id="nama" type="text" class="validate" name="nama" required>
-                            <?php
-                            if (isset($_SESSION['namaref'])) {
-                                $namaref = $_SESSION['namaref'];
-                                echo '<div id="alert-message" class="callout bottom z-depth-1 red lighten-4 red-text">' . $namaref . '</div>';
-                                unset($_SESSION['namaref']);
-                            }
-                            ?>
-                            <label for="nama">Nama</label>
-                        </div>
-                        <div class="input-field col s12">
-                            <i class="material-icons prefix md-prefix">subject</i>
-                            <textarea id="uraian" class="materialize-textarea" name="uraian" required></textarea>
-                            <?php
-                            if (isset($_SESSION['uraian'])) {
-                                $uraian = $_SESSION['uraian'];
-                                echo '<div id="alert-message" class="callout bottom z-depth-1 red lighten-4 red-text">' . $uraian . '</div>';
-                                unset($_SESSION['uraian']);
-                            }
-                            ?>
-                            <label for="uraian">Uraian</label>
+    foreach ($alertTypes as $sessionKey => $color) {
+        if (isset($_SESSION[$sessionKey])) {
+            echo '<div id="alert-message" class="row">
+                    <div class="col m12">
+                        <div class="card ' . $color . ' lighten-5">
+                            <div class="card-content notif">
+                                <span class="card-title ' . $color . '-text">
+                                    <i class="material-icons md-36">clear</i> '
+                . htmlspecialchars($_SESSION[$sessionKey]) . '
+                                </span>
+                            </div>
                         </div>
                     </div>
-                    <!-- Row in form END -->
-                    <div class="row">
-                        <div class="col 6">
-                            <button type="submit" name="submit" class="btn-large blue waves-effect waves-light">SIMPAN <i
-                                    class="material-icons">done</i></button>
-                        </div>
-                        <div class="col 6">
-                            <a href="?page=ref" class="btn-large deep-orange waves-effect waves-light">BATAL <i
-                                    class="material-icons">clear</i></a>
-                        </div>
-                    </div>
-
-                </form>
-                <!-- Form END -->
-
-            </div>
-            <!-- Row form END -->
-
-            <?php
+                </div>';
+            unset($_SESSION[$sessionKey]);
         }
     }
+}
+
+/**
+ * Render klasifikasi form
+ */
+function renderKlasifikasiForm()
+{
+    return '<!-- Row form Start -->
+            <div class="row jarak-form">
+                <!-- Form START -->
+                <form class="col s12" method="post" action="?page=ref&act=add">
+                    <!-- Row in form START -->
+                    <div class="row">
+                        ' . renderFormFields() . '
+                    </div>
+                    <!-- Row in form END -->
+                    ' . renderFormButtons() . '
+                </form>
+                <!-- Form END -->
+            </div>
+            <!-- Row form END -->';
+}
+
+/**
+ * Render form fields
+ */
+function renderFormFields()
+{
+    $fields = [
+        [
+            'name' => 'kode',
+            'label' => 'Kode',
+            'icon' => 'font_download',
+            'type' => 'text',
+            'attributes' => 'maxlength="30"',
+            'error_keys' => ['kode', 'duplikasi'],
+            'width' => 's3'
+        ],
+        [
+            'name' => 'nama',
+            'label' => 'Nama',
+            'icon' => 'text_fields',
+            'type' => 'text',
+            'error_keys' => ['namaref'],
+            'width' => 's9'
+        ],
+        [
+            'name' => 'uraian',
+            'label' => 'Uraian',
+            'icon' => 'subject',
+            'type' => 'textarea',
+            'error_keys' => ['uraian'],
+            'width' => 's12'
+        ]
+    ];
+
+    $html = '';
+    foreach ($fields as $field) {
+        $html .= '<div class="input-field col ' . $field['width'] . '">
+                    <i class="material-icons prefix md-prefix">' . $field['icon'] . '</i>';
+
+        if ($field['type'] === 'textarea') {
+            $html .= '<textarea id="' . $field['name'] . '" class="materialize-textarea" name="' . $field['name'] . '" required></textarea>';
+        } else {
+            $html .= '<input id="' . $field['name'] . '" type="' . $field['type'] . '" class="validate" name="' . $field['name'] . '" 
+                       ' . ($field['attributes'] ?? '') . ' required>';
+        }
+
+        // Display validation errors
+        foreach ($field['error_keys'] as $errorKey) {
+            if (isset($_SESSION[$errorKey])) {
+                $html .= '<div id="alert-message" class="callout bottom z-depth-1 red lighten-4 red-text">'
+                    . htmlspecialchars($_SESSION[$errorKey]) . '</div>';
+                unset($_SESSION[$errorKey]);
+            }
+        }
+
+        $html .= '<label for="' . $field['name'] . '">' . $field['label'] . '</label>
+                </div>';
+    }
+
+    return $html;
+}
+
+/**
+ * Render form buttons
+ */
+function renderFormButtons()
+{
+    return '<div class="row">
+                <div class="col 6">
+                    <button type="submit" name="submit" class="btn-large blue waves-effect waves-light">
+                        SIMPAN <i class="material-icons">done</i>
+                    </button>
+                </div>
+                <div class="col 6">
+                    <a href="?page=ref" class="btn-large deep-orange waves-effect waves-light">
+                        BATAL <i class="material-icons">clear</i>
+                    </a>
+                </div>
+            </div>';
 }
 ?>

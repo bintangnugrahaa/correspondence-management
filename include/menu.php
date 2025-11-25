@@ -9,7 +9,7 @@ if (empty($_SESSION['admin'])) {
 <nav class="blue-grey darken-5">
     <div class="nav-wrapper">
         <a href="./" class="brand-logo center hide-on-large-only">
-            <i class="material-icons md-36">school</i> PT
+            <i class="material-icons md-36">school</i> 
         </a>
 
         <?php displaySideNavigation(); ?>
@@ -231,7 +231,7 @@ function displayTopLogo()
     ?>
     <li>
         <a href="./" class="ams hide-on-med-and-down">
-            <i class="material-icons md-36">school</i> PT
+            <i class="material-icons md-36">school</i> 
         </a>
     </li>
     <li>

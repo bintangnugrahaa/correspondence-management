@@ -1,21 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
-  <!-- Head START -->
+<html lang="id">
   <head>
-    <title>Aplikasi Manajemen Surat</title>
+    <title>JavaScript Diperlukan - Aplikasi Manajemen Surat</title>
 
     <!-- Meta START -->
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
-    />
-    <link
-      rel="shortcut icon"
-      href="asset/img/favicon.ico"
-      type="image/x-icon"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta name="description" content="Aplikasi Manajemen Surat memerlukan JavaScript untuk berfungsi dengan baik." />
+    <link rel="shortcut icon" href="asset/img/favicon.ico" type="image/x-icon" />
     <link rel="icon" href="asset/img/favicon.ico" type="image/x-icon" />
     <!-- Meta END -->
 
@@ -24,106 +17,216 @@
     <![endif]-->
 
     <!-- Global style START -->
-    <link
-      type="text/css"
-      rel="stylesheet"
-      href="asset/css/materialize.css"
-      media="screen,projection"
-    />
+    <link type="text/css" rel="stylesheet" href="asset/css/materialize.css" media="screen,projection" />
     <style type="text/css">
+      :root {
+        --primary-color: #607d8b;
+        --warning-color: #f44336;
+        --text-color: #212121;
+        --background-opacity: 0.15;
+      }
+
       body {
         background: #fff;
+        color: var(--text-color);
+        font-family: "Roboto", Arial, sans-serif;
+        line-height: 1.6;
       }
+
       .bg::before {
         content: "";
         background-image: url("./asset/img/background.jpg");
         background-repeat: no-repeat;
         background-size: cover;
         background-attachment: fixed;
-        position: absolute;
+        background-position: center;
+        position: fixed;
         z-index: -1;
         top: 0;
-        bottom: 0;
         left: 0;
-        right: 0;
-        opacity: 0.15;
-        filter: alpha(opacity=15);
-        height: 100%;
         width: 100%;
+        height: 100%;
+        opacity: var(--background-opacity);
       }
+
       .container {
         padding-top: 5%;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
       }
-      .material-icons.md-50 {
-        font-size: 1.8em;
-        margin-bottom: 0.2em;
+
+      .warning-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        display: block;
       }
-      h3 {
-        font-size: 2.5em;
+
+      .card-panel {
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       }
-      .mohon {
-        font-size: 1.8em;
+
+      .page-title {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        line-height: 1.2;
       }
-      .text {
-        font-size: 1.2em;
+
+      .page-subtitle {
+        font-size: 1.8rem;
+        margin-bottom: 1.5rem;
+        color: var(--text-color);
+      }
+
+      .instruction-text {
+        font-size: 1.2rem;
         text-align: center;
+        margin-bottom: 2rem;
       }
-      .btn-large {
-        margin-top: 20px;
-        font-size: 1.4em;
+
+      .refresh-button {
+        margin-top: 2rem;
+        font-size: 1.4rem;
+        padding: 0 2rem;
+        height: auto;
+        line-height: 3rem;
+      }
+
+      .refresh-button .material-icons {
+        margin-left: 0.5rem;
+      }
+
+      /* Focus styles for accessibility */
+      .refresh-button:focus {
+        outline: 2px solid var(--primary-color);
+        outline-offset: 2px;
+      }
+
+      /* Print styles */
+      @media print {
+        .bg::before,
+        .refresh-button {
+          display: none;
+        }
+
+        .card-panel {
+          box-shadow: none;
+          border: 1px solid #ccc;
+        }
+      }
+
+      /* Reduced motion support */
+      @media (prefers-reduced-motion: reduce) {
+        .bg::before {
+          background-attachment: scroll;
+        }
+
+        .refresh-button {
+          transition: none;
+        }
+      }
+
+      /* High contrast support */
+      @media (prefers-contrast: high) {
+        :root {
+          --background-opacity: 0.05;
+        }
+
+        .card-panel {
+          border: 2px solid var(--text-color);
+        }
       }
     </style>
     <!-- Global style END -->
   </head>
-  <!-- Head END -->
 
-  <!-- Body START -->
   <body class="blue-grey lighten-3 bg">
-    <!-- Container START -->
-    <div class="container">
-      <!-- Row START -->
-      <div class="row">
-        <!-- Col START -->
-        <div class="col s12 m8 offset-m2 offset-m2">
-          <!-- Box START -->
-          <div class="card-panel z-depth-2" id="login">
-            <!-- Row START -->
-            <div class="row">
-              <div class="col s12">
-                <div class="card-content">
-                  <h3 class="center red-text">
-                    <i class="material-icons md-50">warning</i> <br />JAVASCRIPT
-                    TELAH DINON-AKTIFKAN!
-                  </h3>
-                  <h4 class="center mohon">
-                    Mohon aktifkan javascript agar aplikasi ini dapat berjalan.
-                  </h4>
-                  <p class="text">
-                    Setelah mengaktifkan javascript pada browser, silakan coba
-                    lagi dengan klik tombol <strong>REFRESH</strong> dibawah
-                    ini.
-                  </p>
+    <!-- Main Content START -->
+    <main role="main">
+      <div class="container">
+        <div class="row">
+          <div class="col s12 m8 offset-m2 l6 offset-l3">
+            <!-- Warning Card START -->
+            <div
+              class="card-panel z-depth-2"
+              role="alert"
+              aria-labelledby="warning-title"
+              aria-describedby="warning-description"
+            >
+              <div class="card-content">
+                <!-- Warning Icon and Title -->
+                <div class="center-align">
+                  <i
+                    class="material-icons warning-icon red-text"
+                    aria-hidden="true"
+                    >warning</i
+                  >
+                  <h1 id="warning-title" class="page-title red-text">
+                    JAVASCRIPT TELAH DINONAKTIFKAN!
+                  </h1>
                 </div>
-                <div class="col s12 m6 offset-m3 offset-m3">
+
+                <!-- Warning Message -->
+                <h2 class="page-subtitle center-align">
+                  Mohon aktifkan JavaScript agar aplikasi dapat berjalan dengan
+                  baik.
+                </h2>
+
+                <!-- Instructions -->
+                <p id="warning-description" class="instruction-text">
+                  Setelah mengaktifkan JavaScript pada browser Anda, silakan
+                  klik tombol
+                  <strong>REFRESH</strong> di bawah ini untuk melanjutkan.
+                </p>
+
+                <!-- Action Button -->
+                <div class="center-align">
                   <a
                     href="./"
-                    class="btn-large waves-effect waves-light blue-grey col s12"
-                    name="submit"
+                    class="btn-large waves-effect waves-light refresh-button blue-grey"
+                    role="button"
                   >
-                    REFRESH <i class="material-icons">refresh</i></a
-                  >
+                    <span class="button-text">REFRESH</span>
+                    <i class="material-icons" aria-hidden="true">refresh</i>
+                  </a>
+                </div>
+
+                <!-- Additional Help -->
+                <div class="section" style="margin-top: 2rem">
+                  <div class="divider"></div>
+                  <div class="section">
+                    <h3 class="center-align" style="font-size: 1.4rem">
+                      Butuh Bantuan?
+                    </h3>
+                    <p class="center-align" style="font-size: 1rem">
+                      Jika Anda tidak tahu cara mengaktifkan JavaScript,
+                      <a
+                        href="https://www.enable-javascript.com/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        kunjungi panduan ini </a
+                      >.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-            <!-- Row  START -->
+            <!-- Warning Card END -->
           </div>
-          <!-- Box END-->
         </div>
-        <!-- Col END -->
       </div>
-      <!-- Row END -->
-    </div>
-    <!-- Container END -->
+    </main>
+    <!-- Main Content END -->
+
+    <!-- NoScript Fallback -->
+    <noscript>
+      <style>
+        .bg::before {
+          opacity: 0.05;
+        }
+      </style>
+    </noscript>
   </body>
-  <!-- Body END -->
 </html>

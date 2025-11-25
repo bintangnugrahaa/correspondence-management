@@ -2,214 +2,392 @@
 date_default_timezone_set("Asia/Jakarta");
 
 /**
- * FUngsi koneksi database.
+ * Database connection function with error handling
  */
 function conn($host, $username, $password, $database)
 {
-    $conn = mysqli_connect($host, $username, $password, $database);
+    try {
+        $conn = mysqli_connect($host, $username, $password, $database);
 
-    // Menampilkan pesan error jika database tidak terhubung
-    return ($conn) ? $conn : "Koneksi database gagal: " . mysqli_connect_error();
+        if (!$conn) {
+            throw new RuntimeException("Database connection failed: " . mysqli_connect_error());
+        }
+
+        // Set character set to UTF-8
+        mysqli_set_charset($conn, "utf8mb4");
+
+        return $conn;
+    } catch (Exception $e) {
+        error_log("Database connection error: " . $e->getMessage());
+        throw $e;
+    }
 }
 
 /**
- * Fungsi untuk mengkonversi format tanggal menjadi format Indonesia.
+ * Convert date to Indonesian format
  */
 function indoDate($date)
 {
-    $exp = explode("-", substr($date, 0, 10));
-    return $exp[2] . ' ' . month($exp[1]) . ' ' . $exp[0];
-}
-
-/**
- * Fungsi untuk mengkonversi format bulan angka menjadi nama bulan.
- */
-function month($kode)
-{
-    $month = '';
-    switch ($kode) {
-        case '01':
-            $month = 'Januari';
-            break;
-        case '02':
-            $month = 'Februari';
-            break;
-        case '03':
-            $month = 'Maret';
-            break;
-        case '04':
-            $month = 'April';
-            break;
-        case '05':
-            $month = 'Mei';
-            break;
-        case '06':
-            $month = 'Juni';
-            break;
-        case '07':
-            $month = 'Juli';
-            break;
-        case '08':
-            $month = 'Agustus';
-            break;
-        case '09':
-            $month = 'September';
-            break;
-        case '10':
-            $month = 'Oktober';
-            break;
-        case '11':
-            $month = 'November';
-            break;
-        case '12':
-            $month = 'Desember';
-            break;
+    if (empty($date) || $date === '0000-00-00') {
+        return '-';
     }
-    return $month;
+
+    try {
+        $timestamp = strtotime($date);
+        if ($timestamp === false) {
+            return $date; // Return original if invalid date
+        }
+
+        $day = date('d', $timestamp);
+        $month = month(date('m', $timestamp));
+        $year = date('Y', $timestamp);
+
+        return $day . ' ' . $month . ' ' . $year;
+    } catch (Exception $e) {
+        error_log("Date conversion error: " . $e->getMessage());
+        return $date;
+    }
 }
 
 /**
- * Fungsi backup database.
+ * Convert month number to Indonesian month name
  */
-function backup($host, $user, $pass, $dbname, $nama_file, $tables)
+function month($monthNumber)
 {
+    $months = [
+        '01' => 'Januari',
+        '02' => 'Februari',
+        '03' => 'Maret',
+        '04' => 'April',
+        '05' => 'Mei',
+        '06' => 'Juni',
+        '07' => 'Juli',
+        '08' => 'Agustus',
+        '09' => 'September',
+        '10' => 'Oktober',
+        '11' => 'November',
+        '12' => 'Desember'
+    ];
 
-    //untuk koneksi database
-    $return = "";
-    $link = mysqli_connect($host, $user, $pass, $dbname);
+    return $months[$monthNumber] ?? $monthNumber;
+}
 
-    //backup semua tabel database
-    if ($tables == '*') {
-        $tables = array();
-        $result = mysqli_query($link, 'SHOW TABLES');
+/**
+ * Backup database to SQL file
+ */
+function backup($host, $user, $pass, $dbname, $fileName, $tables)
+{
+    try {
+        $link = conn($host, $user, $pass, $dbname);
+        $backupContent = generateBackupContent($link, $tables);
+
+        return saveBackupFile($fileName, $backupContent);
+
+    } catch (Exception $e) {
+        error_log("Backup error: " . $e->getMessage());
+        throw new RuntimeException("Backup failed: " . $e->getMessage());
+    }
+}
+
+/**
+ * Generate backup SQL content
+ */
+function generateBackupContent($connection, $tables)
+{
+    $content = "";
+
+    // Get tables to backup
+    $tablesToBackup = getTablesToBackup($connection, $tables);
+
+    foreach ($tablesToBackup as $table) {
+        $content .= backupTableStructure($connection, $table);
+        $content .= backupTableData($connection, $table);
+    }
+
+    return $content;
+}
+
+/**
+ * Get list of tables to backup
+ */
+function getTablesToBackup($connection, $tables)
+{
+    if ($tables === '*') {
+        $tables = [];
+        $result = mysqli_query($connection, 'SHOW TABLES');
+        if (!$result) {
+            throw new RuntimeException("Failed to get table list: " . mysqli_error($connection));
+        }
+
         while ($row = mysqli_fetch_row($result)) {
             $tables[] = $row[0];
         }
     } else {
-
-        //backup tabel tertentu
         $tables = is_array($tables) ? $tables : explode(',', $tables);
     }
 
-    //looping table
-    foreach ($tables as $table) {
-        $result = mysqli_query($link, 'SELECT * FROM ' . $table);
-        $num_fields = mysqli_num_fields($result);
-
-        $return .= 'DROP TABLE ' . $table . ';';
-        $row2 = mysqli_fetch_row(mysqli_query($link, 'SHOW CREATE TABLE ' . $table));
-        $return .= "\n\n" . $row2[1] . ";\n\n";
-
-        //looping field table
-        for ($i = 0; $i < $num_fields; $i++) {
-            while ($row = mysqli_fetch_row($result)) {
-                $return .= 'INSERT INTO ' . $table . ' VALUES(';
-
-                for ($j = 0; $j < $num_fields; $j++) {
-                    $row[$j] = addslashes($row[$j]);
-                    $row[$j] = str_replace("\n", "\n", $row[$j]);
-
-                    if (isset($row[$j])) {
-                        $return .= '"' . $row[$j] . '"';
-                    } else {
-                        $return .= '""';
-                    }
-                    if ($j < ($num_fields - 1)) {
-                        $return .= ',';
-                    }
-                }
-                $return .= ");\n";
-            }
-        }
-        $return .= "\n\n\n";
-    }
-
-    //otomatis menyimpan hasil backup database dalam root folder aplikasi
-    $dir = "backup/";
-    if (!is_dir($dir)) {
-        mkdir($dir, 0755);
-    }
-
-    $file = $dir . $nama_file;
-    $handle = fopen($file, 'w+');
-    fwrite($handle, $return);
-    fclose($handle);
+    return $tables;
 }
 
 /**
- * Fungsi retore database.
+ * Backup table structure
  */
-function restore($host, $user, $pass, $dbname, $file)
+function backupTableStructure($connection, $table)
 {
-    global $rest_dir;
+    $content = "DROP TABLE IF EXISTS `$table`;\n";
 
-    //konfigurasi restore database: host, user, password, database
-    $koneksi = mysqli_connect($host, $user, $pass, $dbname);
+    $result = mysqli_query($connection, "SHOW CREATE TABLE `$table`");
+    if (!$result) {
+        throw new RuntimeException("Failed to get table structure for $table: " . mysqli_error($connection));
+    }
 
-    $nama_file = $file['name'];
-    $ukrn_file = $file['size'];
-    $tmp_file = $file['tmp_name'];
+    $row = mysqli_fetch_row($result);
+    $content .= $row[1] . ";\n\n";
 
-    if ($nama_file == "" || $_REQUEST['password'] == "") {
-        $_SESSION['errEmpty'] = 'ERROR! Semua Form wajib diisi';
-        header("Location: ./admin.php?page=sett&sub=rest");
-        die();
-    } else {
+    return $content;
+}
 
-        $password = $_REQUEST['password'];
-        $id_user = $_SESSION['id_user'];
+/**
+ * Backup table data
+ */
+function backupTableData($connection, $table)
+{
+    $content = "";
+    $result = mysqli_query($connection, "SELECT * FROM `$table`");
 
-        $query = mysqli_query($koneksi, "SELECT password FROM tbl_user WHERE id_user='$id_user' AND password=MD5('$password')");
-        if (mysqli_num_rows($query) > 0) {
+    if (!$result) {
+        throw new RuntimeException("Failed to get table data for $table: " . mysqli_error($connection));
+    }
 
-            $alamatfile = $rest_dir . $nama_file;
-            $templine = array();
+    $numFields = mysqli_num_fields($result);
 
-            $ekstensi = array('sql');
-            $nama_file = $file['name'];
-            $x = explode('.', $nama_file);
-            $eks = strtolower(end($x));
+    while ($row = mysqli_fetch_row($result)) {
+        $content .= "INSERT INTO `$table` VALUES(";
 
-            //validasi tipe file
-            if (in_array($eks, $ekstensi) == true) {
+        for ($j = 0; $j < $numFields; $j++) {
+            $row[$j] = mysqli_real_escape_string($connection, $row[$j]);
+            $row[$j] = str_replace("\n", "\\n", $row[$j]);
 
-                if (move_uploaded_file($tmp_file, $alamatfile)) {
-
-                    $templine = '';
-                    $lines = file($alamatfile);
-
-                    foreach ($lines as $line) {
-                        if (substr($line, 0, 2) == '--' || $line == '')
-                            continue;
-
-                        $templine .= $line;
-
-                        if (substr(trim($line), -1, 1) == ';') {
-                            mysqli_query($koneksi, $templine);
-                            $templine = '';
-                        }
-                    }
-
-                    unlink($nama_file);
-                    $_SESSION['succRestore'] = 'SUKSES! Database berhasil direstore';
-                    header("Location: ./admin.php?page=sett&sub=rest");
-                    die();
-                } else {
-                    $_SESSION['errUpload'] = 'ERROR! Proses upload database gagal';
-                    header("Location: ./admin.php?page=ref&act=imp");
-                    die();
-                }
+            if (isset($row[$j])) {
+                $content .= '"' . $row[$j] . '"';
             } else {
-                $_SESSION['errFormat'] = 'ERROR! Format file yang diperbolehkan hanya *.SQL';
-                header("Location: ./admin.php?page=sett&sub=rest");
-                die();
+                $content .= 'NULL';
             }
-        } else {
-            session_destroy();
-            echo '<script language="javascript">
-                    window.alert("ERROR! Password salah. Anda mungkin tidak memiliki akses ke halaman ini");
-                    window.location.href="index.php";
-                  </script>';
+
+            if ($j < ($numFields - 1)) {
+                $content .= ',';
+            }
+        }
+        $content .= ");\n";
+    }
+
+    $content .= "\n\n";
+    return $content;
+}
+
+/**
+ * Save backup to file
+ */
+function saveBackupFile($fileName, $content)
+{
+    $backupDir = "backup/";
+
+    // Create backup directory if it doesn't exist
+    if (!is_dir($backupDir)) {
+        if (!mkdir($backupDir, 0755, true)) {
+            throw new RuntimeException("Failed to create backup directory");
         }
     }
+
+    // Validate filename
+    if (!preg_match('/^[a-zA-Z0-9_\-\.]+\.sql$/', $fileName)) {
+        throw new InvalidArgumentException("Invalid backup filename");
+    }
+
+    $filePath = $backupDir . $fileName;
+
+    if (file_put_contents($filePath, $content) === false) {
+        throw new RuntimeException("Failed to write backup file");
+    }
+
+    return $filePath;
+}
+
+/**
+ * Restore database from SQL file
+ */
+function restore($host, $user, $pass, $dbname, $uploadedFile)
+{
+    try {
+        validateRestoreInput($uploadedFile);
+
+        $connection = conn($host, $user, $pass, $dbname);
+        $filePath = processUploadedFile($uploadedFile);
+
+        executeSqlFile($connection, $filePath);
+
+        // Clean up temporary file
+        unlink($filePath);
+
+        $_SESSION['succRestore'] = 'SUKSES! Database berhasil direstore';
+        header("Location: ./admin.php?page=sett&sub=rest");
+        exit();
+
+    } catch (Exception $e) {
+        error_log("Restore error: " . $e->getMessage());
+
+        // Clean up on error
+        if (isset($filePath) && file_exists($filePath)) {
+            unlink($filePath);
+        }
+
+        throw $e;
+    }
+}
+
+/**
+ * Validate restore input parameters
+ */
+function validateRestoreInput($uploadedFile)
+{
+    if (empty($uploadedFile['name']) || empty($_REQUEST['password'])) {
+        $_SESSION['errEmpty'] = 'ERROR! Semua Form wajib diisi';
+        header("Location: ./admin.php?page=sett&sub=rest");
+        exit();
+    }
+
+    if (!verifyUserPassword($_SESSION['id_user'], $_REQUEST['password'])) {
+        session_destroy();
+        throw new RuntimeException("Invalid password provided for restore operation");
+    }
+}
+
+/**
+ * Verify user password for restore operation
+ */
+function verifyUserPassword($userId, $password)
+{
+    global $config;
+
+    $userId = mysqli_real_escape_string($config, $userId);
+    $passwordHash = md5($password); // Note: Consider upgrading to password_hash()
+
+    $query = mysqli_query(
+        $config,
+        "SELECT password FROM tbl_user WHERE id_user='$userId' AND password='$passwordHash'"
+    );
+
+    return $query && mysqli_num_rows($query) > 0;
+}
+
+/**
+ * Process and validate uploaded SQL file
+ */
+function processUploadedFile($uploadedFile)
+{
+    // Validate file upload
+    if ($uploadedFile['error'] !== UPLOAD_ERR_OK) {
+        throw new RuntimeException("File upload failed with error code: " . $uploadedFile['error']);
+    }
+
+    // Validate file type
+    $fileExtension = strtolower(pathinfo($uploadedFile['name'], PATHINFO_EXTENSION));
+    if ($fileExtension !== 'sql') {
+        $_SESSION['errFormat'] = 'ERROR! Format file yang diperbolehkan hanya *.SQL';
+        header("Location: ./admin.php?page=sett&sub=rest");
+        exit();
+    }
+
+    // Validate file size (max 50MB)
+    if ($uploadedFile['size'] > 50 * 1024 * 1024) {
+        throw new RuntimeException("File size too large");
+    }
+
+    // Create restore directory
+    $restoreDir = "restore/";
+    if (!is_dir($restoreDir)) {
+        mkdir($restoreDir, 0755, true);
+    }
+
+    // Generate safe filename
+    $safeFileName = uniqid() . '_' . preg_replace('/[^a-zA-Z0-9_\-\.]/', '_', $uploadedFile['name']);
+    $filePath = $restoreDir . $safeFileName;
+
+    // Move uploaded file
+    if (!move_uploaded_file($uploadedFile['tmp_name'], $filePath)) {
+        throw new RuntimeException("Failed to move uploaded file");
+    }
+
+    return $filePath;
+}
+
+/**
+ * Execute SQL file against database
+ */
+function executeSqlFile($connection, $filePath)
+{
+    if (!file_exists($filePath)) {
+        throw new RuntimeException("SQL file not found");
+    }
+
+    $sql = file_get_contents($filePath);
+    if ($sql === false) {
+        throw new RuntimeException("Failed to read SQL file");
+    }
+
+    // Split SQL file into individual queries
+    $queries = splitSqlQueries($sql);
+
+    // Execute each query
+    foreach ($queries as $query) {
+        $query = trim($query);
+        if (!empty($query)) {
+            if (!mysqli_query($connection, $query)) {
+                throw new RuntimeException("Query execution failed: " . mysqli_error($connection) . " - Query: " . substr($query, 0, 100));
+            }
+        }
+    }
+}
+
+/**
+ * Split SQL file into individual queries
+ */
+function splitSqlQueries($sql)
+{
+    // Remove comments
+    $sql = preg_replace('/--.*$/m', '', $sql);
+    $sql = preg_replace('/\/\*.*?\*\//s', '', $sql);
+
+    // Split by semicolon, but ignore semicolons within quotes
+    $queries = [];
+    $currentQuery = '';
+    $inString = false;
+    $stringChar = '';
+
+    for ($i = 0; $i < strlen($sql); $i++) {
+        $char = $sql[$i];
+
+        if (($char === "'" || $char === '"') && ($i === 0 || $sql[$i - 1] !== "\\")) {
+            if (!$inString) {
+                $inString = true;
+                $stringChar = $char;
+            } elseif ($char === $stringChar) {
+                $inString = false;
+            }
+        }
+
+        $currentQuery .= $char;
+
+        if ($char === ';' && !$inString) {
+            $queries[] = $currentQuery;
+            $currentQuery = '';
+        }
+    }
+
+    // Add the last query if any
+    if (!empty(trim($currentQuery))) {
+        $queries[] = $currentQuery;
+    }
+
+    return $queries;
 }
