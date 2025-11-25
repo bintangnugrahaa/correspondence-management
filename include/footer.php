@@ -1,97 +1,130 @@
 <?php
-    //cek session
-    if(!empty($_SESSION['admin'])){
+// Check session
+if (empty($_SESSION['admin'])) {
+    header("Location: ../");
+    exit();
+}
 ?>
 
-<noscript>
-    <meta http-equiv="refresh" content="0;URL='./enable-javascript.html'" />
-</noscript>
-<!-- Include Head END -->
+<!DOCTYPE html>
+<html lang="id">
 <!-- Body START -->
-<body class="bg pace-done"> ==$0
 
-    : :before
+<body class="bg pace-done">
 
+    <noscript>
+        <meta http-equiv="refresh" content="0;URL='./enable-javascript.html'" />
+    </noscript>
 
-<!-- Footer START -->
-<!-- hapus ini buat munculin copyright
-<footer class="page-footer">
-    <div class="container">
-           <div class="row">
-               <br/>
-           </div>
-    </div>
-    <div class="footer-copyright blue-grey darken-1 white-text">
-        <div class="container" id="footer">
-            <?php
-                $query = mysqli_query($config, "SELECT * FROM tbl_instansi");
-                while($data = mysqli_fetch_array($query)){
-            ?>
-                <span class="white-text copyright-date">&copy; <?php echo date("Y"); ?> <?php echo $data['nama'] .'</span>
-                ';?>
-            <?php } ?>
+    <!-- Footer START -->
+    <!-- 
+    Uncomment this section to show copyright footer
+    <footer class="page-footer">
+        <div class="container">
+            <div class="row">
+                <br/>
+            </div>
         </div>
-    </div>
-</footer>
-<!-- Footer END -->
+        <div class="footer-copyright blue-grey darken-1 white-text">
+            <div class="container" id="footer">
+                <?php renderCopyright(); ?>
+            </div>
+        </div>
+    </footer>
+    -->
+    <!-- Footer END -->
 
-<!-- Javascript START -->
-<script type="text/javascript" src="asset/js/jquery-2.1.1.min.js"></script>
-<script type="text/javascript" src="asset/js/materialize.min.js"></script>
-<script type="text/javascript" src="asset/js/bootstrap.min.js"></script>
-<script type="text/javascript" src="asset/js/jquery.autocomplete.min.js"></script>
-<script data-pace-options='{ "ajax": false }' src='asset/js/pace.min.js'></script>
-<script type="text/javascript">
-$(document).ready(function(){
-    //jquery dropdown
-    $(".dropdown-button").dropdown({ hover: false });
+    <!-- Javascript START -->
+    <?php includeJavascript(); ?>
+    <!-- Javascript END -->
 
-    //jquery sidenav on mobile
-    $('.button-collapse').sideNav({
-        menuWidth: 240,
-        edge: 'left',
-        closeOnClick: true
-    });
+</body>
 
-    //jquery datepicker
-    $('#tgl_surat,#batas_waktu,#dari_tanggal,#sampai_tanggal').pickadate({
-        selectMonths: true,
-        selectYears: 10,
-        format: "yyyy-mm-dd"
-    });
-
-    //jquery teaxtarea
-    $('#isi_ringkas').val('');
-    $('#isi_ringkas').trigger('autoresize');
-
-    //jquery dropdown select dan tooltip
-    $('select').material_select();
-    $('.tooltipped').tooltip({delay: 10});
-
-    //jquery autocomplete
-    $( "#kode" ).autocomplete({
-        serviceUrl: "kode.php",   // Kode php untuk prosesing data.
-        dataType: "JSON",           // Tipe data JSON.
-        onSelect: function (suggestion) {
-            $( "#kode" ).val(suggestion.kode);
-        }
-    });
-
-    //jquery untuk menampilkan pemberitahuan
-    $("#alert-message").alert().delay(5000).fadeOut('slow');
-
-    //jquery modal
-    $('.modal-trigger').leanModal();
- });
-
-</script>
-<!-- Javascript END -->
+</html>
 
 <?php
-    } else {
-        header("Location: ../");
-        die();
+
+/**
+ * Render copyright information from database
+ */
+function renderCopyright()
+{
+    global $config;
+
+    $query = mysqli_query($config, "SELECT nama FROM tbl_instansi LIMIT 1");
+    if ($query && $data = mysqli_fetch_array($query)) {
+        echo '<span class="white-text copyright-date">&copy; ' . date("Y") . ' ' .
+            htmlspecialchars($data['nama']) . '</span>';
     }
-?>
-    </body>
-</html>
+}
+
+/**
+ * Include all javascript files and initialization
+ */
+function includeJavascript()
+{
+    $jsFiles = [
+        'asset/js/jquery-2.1.1.min.js',
+        'asset/js/materialize.min.js',
+        'asset/js/bootstrap.min.js',
+        'asset/js/jquery.autocomplete.min.js',
+        'asset/js/pace.min.js'
+    ];
+
+    foreach ($jsFiles as $file) {
+        echo '<script type="text/javascript" src="' . htmlspecialchars($file) . '"></script>' . "\n";
+    }
+    ?>
+
+    <script data-pace-options='{ "ajax": false }'></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            initializeComponents();
+        });
+
+        /**
+         * Initialize all JavaScript components
+         */
+        function initializeComponents() {
+            // Dropdown initialization
+            $(".dropdown-button").dropdown({ hover: false });
+
+            // Mobile sidenav initialization
+            $('.button-collapse').sideNav({
+                menuWidth: 240,
+                edge: 'left',
+                closeOnClick: true
+            });
+
+            // Datepicker initialization
+            $('#tgl_surat, #batas_waktu, #dari_tanggal, #sampai_tanggal').pickadate({
+                selectMonths: true,
+                selectYears: 10,
+                format: "yyyy-mm-dd"
+            });
+
+            // Textarea auto-resize
+            $('#isi_ringkas').val('').trigger('autoresize');
+
+            // Select dropdown and tooltip initialization
+            $('select').material_select();
+            $('.tooltipped').tooltip({ delay: 10 });
+
+            // Autocomplete initialization
+            $("#kode").autocomplete({
+                serviceUrl: "kode.php",
+                dataType: "JSON",
+                onSelect: function (suggestion) {
+                    $("#kode").val(suggestion.kode);
+                }
+            });
+
+            // Alert message auto-hide
+            $("#alert-message").alert().delay(5000).fadeOut('slow');
+
+            // Modal initialization
+            $('.modal-trigger').leanModal();
+        }
+    </script>
+    <?php
+}

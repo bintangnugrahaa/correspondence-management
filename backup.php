@@ -1,17 +1,17 @@
 <?php
-    //cek session
-    if(empty($_SESSION['admin'])){
-        $_SESSION['err'] = '<center>Anda harus login terlebih dahulu!</center>';
-        header("Location: ./");
-        die();
-    } else {
+//cek session
+if (empty($_SESSION['admin'])) {
+    $_SESSION['err'] = '<center>Anda harus login terlebih dahulu!</center>';
+    header("Location: ./");
+    die();
+} else {
 
-        if($_SESSION['admin'] != 1){
-            echo '<script language="javascript">
+    if ($_SESSION['admin'] != 1) {
+        echo '<script language="javascript">
                     window.alert("ERROR! Anda tidak memiliki hak akses untuk membuka halaman ini");
                     window.location.href="./logout.php";
                   </script>';
-        } else {
+    } else {
 
         echo '<!-- Row Start -->
                 <div class="row">
@@ -33,59 +33,59 @@
                 </div>
                 <!-- Row END -->';
 
-                // download file hasil backup
-                if(isset($_REQUEST['nama_file'])){
+        // download file hasil backup
+        if (isset($_REQUEST['nama_file'])) {
 
-                    $back_dir = "backup/";
-                	$file     = $back_dir.$_REQUEST['nama_file'];
-                    $x        = explode('.', $file);
-                    $eks      = strtolower(end($x));
+            $back_dir = "backup/";
+            $file = $back_dir . $_REQUEST['nama_file'];
+            $x = explode('.', $file);
+            $eks = strtolower(end($x));
 
-                    if($eks == 'sql'){
+            if ($eks == 'sql') {
 
-                    	if(file_exists($file)){
+                if (file_exists($file)) {
 
-                    		header('Content-Description: File Transfer');
-                    		header('Content-Type: application/octet-stream');
-                    		header('Content-Disposition: attachment; filename='.($file));
-                    		header('Content-Transfer-Encoding: binary');
-                    		header('Expires: 0');
-                    		header('Cache-Control: private');
-                    		header('Pragma: private');
-                    		header('Content-Length: ' . filesize($file));
-                    		ob_clean();
-                    		flush();
-                    		readfile($file);
-                    		exit;
-                    	} else {
-                            echo '<script language="javascript">
+                    header('Content-Description: File Transfer');
+                    header('Content-Type: application/octet-stream');
+                    header('Content-Disposition: attachment; filename=' . ($file));
+                    header('Content-Transfer-Encoding: binary');
+                    header('Expires: 0');
+                    header('Cache-Control: private');
+                    header('Pragma: private');
+                    header('Content-Length: ' . filesize($file));
+                    ob_clean();
+                    flush();
+                    readfile($file);
+                    exit;
+                } else {
+                    echo '<script language="javascript">
                                     window.alert("ERROR! File sudah tidak ada");
                                     window.location.href="./admin.php?page=sett&sub=back";
                                   </script>';
-                        }
-                    } else {
-                        if($_SESSION['id_user'] == 1){
-                            echo '<script language="javascript">
+                }
+            } else {
+                if ($_SESSION['id_user'] == 1) {
+                    echo '<script language="javascript">
                                     window.alert("ERROR! Format file yang boleh didownload hanya *.SQL");
                                     window.location.href="./logout.php";
                                   </script>';
-                        }
-                    }
                 }
+            }
+        }
 
-                // proses backup  database dilakukan oleh Fungsi
+        // proses backup  database dilakukan oleh Fungsi
 
 
-                //nama database hasil backup
-                $file = date("Y-m-d_His").'.sql';
+        //nama database hasil backup
+        $file = date("Y-m-d_His") . '.sql';
 
-                //backup database
-                if(isset($_REQUEST['backup'])){
+        //backup database
+        if (isset($_REQUEST['backup'])) {
 
-                    //konfigurasi backup database: host, user, password, database
-                    backup($host, $username, $password, $database, $file, "*");
+            //konfigurasi backup database: host, user, password, database
+            backup($host, $username, $password, $database, $file, "*");
 
-                  echo '<!-- Row form Start -->
+            echo '<!-- Row form Start -->
                         <div class="row">
                             <div class="col m12">
                                 <div class="card">
@@ -96,15 +96,15 @@
                                     </div>
                                     <div class="card-action">
                                         <form method="post" enctype="multipart/form-data" >
-                                            <a href="?page=sett&sub=back&nama_file='.$file.'" class="btn-large blue waves-effect waves-light white-text">DOWNLOAD <i class="material-icons">file_download</i></a>
+                                            <a href="?page=sett&sub=back&nama_file=' . $file . '" class="btn-large blue waves-effect waves-light white-text">DOWNLOAD <i class="material-icons">file_download</i></a>
                                         </form>
                                     </div>
                                 </div>
                             </div>
                         </div>';
-                } else {
+        } else {
 
-                    echo '
+            echo '
                     <!-- Row form Start -->
                     <div class="row">
                         <div class="col m12">
@@ -123,7 +123,7 @@
                             </div>
                         </div>
                     </div>';
-                }
-            }
         }
+    }
+}
 ?>

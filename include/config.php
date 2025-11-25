@@ -1,5 +1,5 @@
 <?php
-$host     = "localhost";    // Nama host
+$host = "localhost";    // Nama host
 $username = "root";         // Username database
-$password = "root";   // Password database
-$database = "ams_native";   // Nama database
+$password = "";   // Password database
+$database = "correspondence-management";   // Nama database

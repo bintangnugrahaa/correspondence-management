@@ -17,7 +17,7 @@ function conn($host, $username, $password, $database)
  */
 function indoDate($date)
 {
-    $exp = explode("-", substr($date,0,10));
+    $exp = explode("-", substr($date, 0, 10));
     return $exp[2] . ' ' . month($exp[1]) . ' ' . $exp[0];
 }
 
@@ -71,84 +71,86 @@ function month($kode)
 /**
  * Fungsi backup database.
  */
-function backup($host, $user, $pass, $dbname, $nama_file, $tables){
+function backup($host, $user, $pass, $dbname, $nama_file, $tables)
+{
 
     //untuk koneksi database
     $return = "";
     $link = mysqli_connect($host, $user, $pass, $dbname);
 
     //backup semua tabel database
-    if($tables == '*'){
+    if ($tables == '*') {
         $tables = array();
         $result = mysqli_query($link, 'SHOW TABLES');
-        while($row = mysqli_fetch_row($result)){
+        while ($row = mysqli_fetch_row($result)) {
             $tables[] = $row[0];
         }
     } else {
 
         //backup tabel tertentu
-        $tables = is_array($tables) ? $tables : explode(',',$tables);
+        $tables = is_array($tables) ? $tables : explode(',', $tables);
     }
 
     //looping table
-    foreach($tables as $table){
-        $result = mysqli_query($link, 'SELECT * FROM '.$table);
+    foreach ($tables as $table) {
+        $result = mysqli_query($link, 'SELECT * FROM ' . $table);
         $num_fields = mysqli_num_fields($result);
 
-        $return.= 'DROP TABLE '.$table.';';
-        $row2 = mysqli_fetch_row(mysqli_query($link, 'SHOW CREATE TABLE '.$table));
-        $return.= "\n\n".$row2[1].";\n\n";
+        $return .= 'DROP TABLE ' . $table . ';';
+        $row2 = mysqli_fetch_row(mysqli_query($link, 'SHOW CREATE TABLE ' . $table));
+        $return .= "\n\n" . $row2[1] . ";\n\n";
 
         //looping field table
-        for($i = 0; $i < $num_fields; $i++){
-            while($row = mysqli_fetch_row($result)){
-                $return.= 'INSERT INTO '.$table.' VALUES(';
+        for ($i = 0; $i < $num_fields; $i++) {
+            while ($row = mysqli_fetch_row($result)) {
+                $return .= 'INSERT INTO ' . $table . ' VALUES(';
 
-                for($j=0; $j<$num_fields; $j++){
+                for ($j = 0; $j < $num_fields; $j++) {
                     $row[$j] = addslashes($row[$j]);
-                    $row[$j] = str_replace("\n","\n",$row[$j]);
+                    $row[$j] = str_replace("\n", "\n", $row[$j]);
 
-                    if(isset($row[$j])){
-                        $return.= '"'.$row[$j].'"' ;
+                    if (isset($row[$j])) {
+                        $return .= '"' . $row[$j] . '"';
                     } else {
-                        $return.= '""';
+                        $return .= '""';
                     }
-                    if ($j<($num_fields-1)){
-                        $return.= ',';
+                    if ($j < ($num_fields - 1)) {
+                        $return .= ',';
                     }
                 }
-                $return.= ");\n";
+                $return .= ");\n";
             }
         }
-        $return.="\n\n\n";
+        $return .= "\n\n\n";
     }
 
     //otomatis menyimpan hasil backup database dalam root folder aplikasi
     $dir = "backup/";
-    if (! is_dir($dir)) {
+    if (!is_dir($dir)) {
         mkdir($dir, 0755);
     }
 
     $file = $dir . $nama_file;
-    $handle = fopen($file,'w+');
-    fwrite($handle,$return);
+    $handle = fopen($file, 'w+');
+    fwrite($handle, $return);
     fclose($handle);
 }
 
 /**
  * Fungsi retore database.
  */
-function restore($host, $user, $pass, $dbname, $file){
+function restore($host, $user, $pass, $dbname, $file)
+{
     global $rest_dir;
 
     //konfigurasi restore database: host, user, password, database
     $koneksi = mysqli_connect($host, $user, $pass, $dbname);
 
-    $nama_file	= $file['name'];
-    $ukrn_file	= $file['size'];
-    $tmp_file	= $file['tmp_name'];
+    $nama_file = $file['name'];
+    $ukrn_file = $file['size'];
+    $tmp_file = $file['tmp_name'];
 
-    if($nama_file == "" || $_REQUEST['password'] == ""){
+    if ($nama_file == "" || $_REQUEST['password'] == "") {
         $_SESSION['errEmpty'] = 'ERROR! Semua Form wajib diisi';
         header("Location: ./admin.php?page=sett&sub=rest");
         die();
@@ -158,31 +160,31 @@ function restore($host, $user, $pass, $dbname, $file){
         $id_user = $_SESSION['id_user'];
 
         $query = mysqli_query($koneksi, "SELECT password FROM tbl_user WHERE id_user='$id_user' AND password=MD5('$password')");
-        if(mysqli_num_rows($query) > 0){
+        if (mysqli_num_rows($query) > 0) {
 
-            $alamatfile	= $rest_dir.$nama_file;
-            $templine	= array();
+            $alamatfile = $rest_dir . $nama_file;
+            $templine = array();
 
             $ekstensi = array('sql');
-            $nama_file	= $file['name'];
+            $nama_file = $file['name'];
             $x = explode('.', $nama_file);
             $eks = strtolower(end($x));
 
             //validasi tipe file
-            if(in_array($eks, $ekstensi) == true){
+            if (in_array($eks, $ekstensi) == true) {
 
-                if(move_uploaded_file($tmp_file , $alamatfile)){
+                if (move_uploaded_file($tmp_file, $alamatfile)) {
 
-                    $templine	= '';
-                    $lines		= file($alamatfile);
+                    $templine = '';
+                    $lines = file($alamatfile);
 
-                    foreach ($lines as $line){
-                        if(substr($line, 0, 2) == '--' || $line == '')
+                    foreach ($lines as $line) {
+                        if (substr($line, 0, 2) == '--' || $line == '')
                             continue;
 
                         $templine .= $line;
 
-                        if(substr(trim($line), -1, 1) == ';'){
+                        if (substr(trim($line), -1, 1) == ';') {
                             mysqli_query($koneksi, $templine);
                             $templine = '';
                         }

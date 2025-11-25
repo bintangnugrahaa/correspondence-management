@@ -1,16 +1,16 @@
 <?php
-    ob_start();
-    session_start();
+ob_start();
+session_start();
 
-    //cek session
-    if(isset($_SESSION['admin'])){
-        header("Location: ./admin.php");
-        die();
-    }
+//cek session
+if (isset($_SESSION['admin'])) {
+    header("Location: ./admin.php");
+    die();
+}
 
-    require_once 'include/config.php';
-    require_once 'include/functions.php';
-    $config = conn($host, $username, $password, $database);
+require_once 'include/config.php';
+require_once 'include/functions.php';
+$config = conn($host, $username, $password, $database);
 ?>
 <!--
 
@@ -28,6 +28,7 @@ Website     : https://bintangnugraha.vercel.app/
 <html lang="en">
 
 <!-- Head START -->
+
 <head>
 
     <title>Aplikasi Pengarsipan Surat</title>
@@ -37,9 +38,9 @@ Website     : https://bintangnugraha.vercel.app/
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
     <?php
-        $query = mysqli_query($config, "SELECT logo from tbl_instansi");
-        list($logo) = mysqli_fetch_array($query);
-        echo '<link rel="shortcut icon" href="upload/'.$logo.'">';
+    $query = mysqli_query($config, "SELECT logo from tbl_instansi");
+    list($logo) = mysqli_fetch_array($query);
+    echo '<link rel="shortcut icon" href="upload/' . $logo . '">';
     ?>
     <!-- Meta END -->
 
@@ -53,6 +54,7 @@ Website     : https://bintangnugraha.vercel.app/
         body {
             background: #fff;
         }
+
         .bg::before {
             content: '';
             background-image: url('./asset/img/logo5.png');
@@ -66,61 +68,74 @@ Website     : https://bintangnugraha.vercel.app/
             left: 0;
             right: 0;
             opacity: 100;
-            filter:alpha(opacity=10);
-            height:100%;
-            width:100%;
+            filter: alpha(opacity=10);
+            height: 100%;
+            width: 100%;
         }
+
         @media only screen and (min-width: 993px) {
             .container {
-                width: 60%!important;
+                width: 60% !important;
             }
         }
+
         .container {
             max-width: 100%;
             margin-top: 2.5rem;
         }
+
         #logo {
             display: block;
             margin: -20px auto -5px;
         }
+
         img {
             border-radius: 50%;
             margin: 0 auto;
             width: 100px;
             height: 100px;
         }
+
         #login {
             margin-top: -2%;
         }
+
         #smk {
             font-size: 2rem;
             margin-bottom: 10px;
         }
+
         .batas {
             border-bottom: 1px dotted #444;
             margin: 0 auto;
             width: 90%;
         }
+
         #title {
             margin: 5px 0 35px;
         }
+
         .btn-large {
             font-size: 1.25rem;
             margin: 0;
         }
+
         #alert-message {
             border-radius: 3px;
-            color: #f44336 ;
+            color: #f44336;
             font-size: 1.15rem;
             margin: 15px 15px -15px;
         }
+
         .error {
             padding: 10px;
         }
+
         .upss {
             font-size: 1.2rem;
             margin-left: 20px;
         }
+
         .pace {
             -webkit-pointer-events: none;
             pointer-events: none;
@@ -138,11 +153,13 @@ Website     : https://bintangnugraha.vercel.app/
             -ms-transition: -webkit-transform .5s ease-out;
             transition: transform .5s ease-out;
         }
+
         .pace.pace-active {
             -webkit-transform: translate3d(0, 0, 0);
             -ms-transform: translate3d(0, 0, 0);
             transform: translate3d(0, 0, 0);
         }
+
         .pace .pace-progress {
             display: block;
             position: fixed;
@@ -154,12 +171,15 @@ Website     : https://bintangnugraha.vercel.app/
             background: #2196f3;
             pointer-events: none;
         }
+
         noscript {
             color: #42a5f5;
         }
-       .input-field label {
+
+        .input-field label {
             font-size: 1.2rem;
         }
+
         .input-field label.active {
             font-size: 1rem;
         }
@@ -170,6 +190,7 @@ Website     : https://bintangnugraha.vercel.app/
 <!-- Head END -->
 
 <!-- Body START -->
+
 <body class="blue-grey lighten-3 bg">
 
     <!-- Container START -->
@@ -187,31 +208,31 @@ Website     : https://bintangnugraha.vercel.app/
                     <!-- Row Form START -->
                     <div class="row">
 
-                    <?php
+                        <?php
                         $query = mysqli_query($config, "SELECT * FROM tbl_instansi");
-                        while($data = mysqli_fetch_array($query)){
-                    ?>
-                    <!-- Logo and title START -->
-                    <div class="col s12">
-                        <div class="card-content">
-                            <!-- h5 class="center" id="title">Aplikasi Pengarsipan Surat</h5 -->
-                            <br><br><?php echo '<img id="logo" src="upload/'.$data['logo'].'">';?>
-                            <h4 class="center" id="smk">
-                            <?php echo 'L O G I N';?>
-                            </h4>
-                            <div class="batas"></div>
-                        </div>
-                    </div>
-                    <!-- Logo and title END -->
-                    <?php
+                        while ($data = mysqli_fetch_array($query)) {
+                            ?>
+                            <!-- Logo and title START -->
+                            <div class="col s12">
+                                <div class="card-content">
+                                    <!-- h5 class="center" id="title">Aplikasi Pengarsipan Surat</h5 -->
+                                    <br><br><?php echo '<img id="logo" src="upload/' . $data['logo'] . '">'; ?>
+                                    <h4 class="center" id="smk">
+                                        <?php echo 'L O G I N'; ?>
+                                    </h4>
+                                    <div class="batas"></div>
+                                </div>
+                            </div>
+                            <!-- Logo and title END -->
+                            <?php
                         }
-                    ?>
+                        ?>
 
-                    <?php
-                        if(isset($_REQUEST['submit'])){
+                        <?php
+                        if (isset($_REQUEST['submit'])) {
 
                             //validasi form kosong
-                            if($_REQUEST['username'] == "" || $_REQUEST['password'] == ""){
+                            if ($_REQUEST['username'] == "" || $_REQUEST['password'] == "") {
                                 echo '<div class="upss red-text"><i class="material-icons">error_outline</i> <strong>ERROR!</strong> Username dan Password wajib diisi.
                                 <a class="btn-large waves-effect waves-light blue-grey col s11" href="" style="margin: 20px 0 0 5px;"><i class="material-icons md-24">arrow_back</i> Kembali ke login form</a></div>';
                             } else {
@@ -221,7 +242,7 @@ Website     : https://bintangnugraha.vercel.app/
 
                                 $query = mysqli_query($config, "SELECT id_user, username, nama, nip, admin FROM tbl_user WHERE username=BINARY'$username' AND password=MD5('$password')");
 
-                                if(mysqli_num_rows($query) > 0){
+                                if (mysqli_num_rows($query) > 0) {
                                     list($id_user, $username, $nama, $nip, $admin) = mysqli_fetch_array($query);
 
                                     //buat session
@@ -242,44 +263,45 @@ Website     : https://bintangnugraha.vercel.app/
                                 }
                             }
                         } else {
-                    ?>
-
-                    <!-- Form START -->
-                    <form class="col s12 m12 offset-4 offset-4" method="POST" action="" >
-                        <div class="row">
-                            <?php
-                                if(isset($_SESSION['errLog'])){
-                                    $errLog = $_SESSION['errLog'];
-                                    echo '<div id="alert-message" class="error red lighten-5"><div class="center"><i class="material-icons">error_outline</i> <strong>LOGIN GAGAL!</strong></div>
-                                    '.$errLog.'</div>';
-                                    unset($_SESSION['errLog']);
-                                }
-                                if(isset($_SESSION['err'])){
-                                    $err = $_SESSION['err'];
-                                    echo '<div id="alert-message" class="error red lighten-5"><div class="center"><i class="material-icons">error_outline</i> <strong>ERROR!</strong></div>
-                                    '.$err.'</div>';
-                                    unset($_SESSION['err']);
-                                }
                             ?>
-                        </div>
-                        <div class="input-field col s12">
-                            <i class="material-icons prefix md-prefix">account_circle</i>
-                            <input id="username" type="text" class="validate" name="username" required>
-                            <label for="username">Username</label>
-                        </div>
-                        <div class="input-field col s12">
-                            <i class="material-icons prefix md-prefix">lock</i>
-                            <input id="password" type="password" class="validate" name="password" required">
-                            <label for="password">Password</label>
-                        </div>
-                        <div class="input-field col s12">
-                            <button type="submit" class="btn-large waves-effect waves-light blue-grey col s12" name="submit">LOGIN</button>
-                        </div>
-                    </form>
-                    <!-- Form END -->
-                    <?php
+
+                            <!-- Form START -->
+                            <form class="col s12 m12 offset-4 offset-4" method="POST" action="">
+                                <div class="row">
+                                    <?php
+                                    if (isset($_SESSION['errLog'])) {
+                                        $errLog = $_SESSION['errLog'];
+                                        echo '<div id="alert-message" class="error red lighten-5"><div class="center"><i class="material-icons">error_outline</i> <strong>LOGIN GAGAL!</strong></div>
+                                    ' . $errLog . '</div>';
+                                        unset($_SESSION['errLog']);
+                                    }
+                                    if (isset($_SESSION['err'])) {
+                                        $err = $_SESSION['err'];
+                                        echo '<div id="alert-message" class="error red lighten-5"><div class="center"><i class="material-icons">error_outline</i> <strong>ERROR!</strong></div>
+                                    ' . $err . '</div>';
+                                        unset($_SESSION['err']);
+                                    }
+                                    ?>
+                                </div>
+                                <div class="input-field col s12">
+                                    <i class="material-icons prefix md-prefix">account_circle</i>
+                                    <input id="username" type="text" class="validate" name="username" required>
+                                    <label for="username">Username</label>
+                                </div>
+                                <div class="input-field col s12">
+                                    <i class="material-icons prefix md-prefix">lock</i>
+                                    <input id="password" type="password" class="validate" name="password" required">
+                                    <label for="password">Password</label>
+                                </div>
+                                <div class="input-field col s12">
+                                    <button type="submit" class="btn-large waves-effect waves-light blue-grey col s12"
+                                        name="submit">LOGIN</button>
+                                </div>
+                            </form>
+                            <!-- Form END -->
+                            <?php
                         }
-                    ?>
+                        ?>
                     </div>
                     <!-- Row Form START -->
 

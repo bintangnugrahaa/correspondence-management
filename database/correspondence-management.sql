@@ -19,7 +19,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `ams_native`
+-- Database: `correspondence-management`
 --
 
 -- --------------------------------------------------------
@@ -64,7 +64,7 @@ CREATE TABLE `tbl_instansi` (
 --
 
 INSERT INTO `tbl_instansi` (`id_instansi`, `institusi`, `nama`, `status`, `alamat`, `kepsek`, `nip`, `website`, `email`, `logo`, `id_user`) VALUES
-(1, 'Dinas Pendidikan Pemuda Dan Olahraga', 'SMK MasRud.com', 'Terakreditasi A', 'Sawahan, Nganjuk, Jawa Timur', 'M. Rudianto', '-', 'https://masrud.com', 'rudi@masrud.com', 'logo.png', 1);
+(1, 'Dinas Pendidikan Pemuda Dan Olahraga', 'SMK TI DWIGUNA', 'Terakreditasi A', 'Jl. Raya Citayam, Gg. H. Dul No.100 Cipayung, Kota Depok', 'Maman Fernandy, S.Kom, M.Pd', '198605122014121003', 'https://smkdwiguna.sch.id', 'smk.dwiguna@gmail.com', 'logo.png', 1);
 
 -- --------------------------------------------------------
 
@@ -162,8 +162,7 @@ CREATE TABLE `tbl_user` (
 --
 
 INSERT INTO `tbl_user` (`id_user`, `username`, `password`, `nama`, `nip`, `admin`) VALUES
-(1, 'bintang', '21232f297a57a5a743894a0e4a801fc3', 'Muhammad Bintang Nugraha', '12345', 1),
-(1, 'nugraha', '53d951605e0267f7e10b5567c6644571', 'Muhammad Bintang Nugraha', '54321', 3);
+(1, 'bintangnugraha', '21232f297a57a5a743894a0e4a801fc3', 'Muhammad Bintang Nugraha', '19790415201001004', 1),
 
 --
 -- Indexes for dumped tables

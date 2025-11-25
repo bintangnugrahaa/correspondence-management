@@ -1,195 +1,165 @@
 <?php
-    ob_start();
-    //cek session
-    session_start();
+ob_start();
+session_start();
 
-    if(empty($_SESSION['admin'])){
-        $_SESSION['err'] = '<center>Anda harus login terlebih dahulu!</center>';
-        header("Location: ./");
-        die();
-    } else {
+// Check if user is logged in as admin
+if (empty($_SESSION['admin'])) {
+    $_SESSION['err'] = '<center>Anda harus login terlebih dahulu!</center>';
+    header("Location: ./");
+    exit();
+}
+
+// Database connection (assuming $config is defined elsewhere)
+require_once 'include/config.php';
+
+/**
+ * Get count from database table
+ */
+function getCount($tableName)
+{
+    global $config;
+    $result = mysqli_query($config, "SELECT COUNT(*) as count FROM $tableName");
+    $row = mysqli_fetch_assoc($result);
+    return $row['count'] ?? 0;
+}
+
+/**
+ * Render dashboard statistics cards
+ */
+function renderStatCard($title, $count, $description, $colorClass, $icon)
+{
+    echo "
+    <div class=\"col s12 m4\">
+        <div class=\"card $colorClass\">
+            <div class=\"card-content\">
+                <span class=\"card-title white-text\">
+                    <i class=\"material-icons md-36\">$icon</i> $title
+                </span>
+                <h5 class=\"white-text link\">$count $description</h5>
+            </div>
+        </div>
+    </div>";
+}
+
+/**
+ * Get user role description
+ */
+function getUserRole($adminLevel, $nama)
+{
+    switch ($adminLevel) {
+        case 1:
+            return "ADMIN UTAMA. Anda memiliki akses penuh terhadap sistem.";
+        case 2:
+            return "ADMINISTRATOR. Berikut adalah statistik data yang tersimpan dalam sistem.";
+        default:
+            return "Petugas Disposisi. Berikut adalah statistik data yang tersimpan dalam sistem.";
+    }
+}
+
+/**
+ * Include page based on request
+ */
+function includePage($page)
+{
+    $allowedPages = [
+        'tsm' => 'transaksi_surat_masuk.php',
+        'ctk' => 'cetak_disposisi.php',
+        'tsk' => 'transaksi_surat_keluar.php',
+        'asm' => 'agenda_surat_masuk.php',
+        'ask' => 'agenda_surat_keluar.php',
+        'ref' => 'referensi.php',
+        'sett' => 'pengaturan.php',
+        'pro' => 'profil.php',
+        'gsm' => 'galeri_sm.php',
+        'gsk' => 'galeri_sk.php'
+    ];
+
+    if (isset($allowedPages[$page])) {
+        include $allowedPages[$page];
+        return true;
+    }
+    return false;
+}
 ?>
 
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="id">
 
-<!-- Include Head START -->
+<!-- Include Head -->
 <?php include('include/head.php'); ?>
-<!-- Include Head END -->
 
-<!-- Body START -->
 <body class="bg">
+    <header>
+        <!-- Include Navigation -->
+        <?php include('include/menu.php'); ?>
+    </header>
 
-<!-- Header START -->
-<header>
-
-<!-- Include Navigation START -->
-<?php include('include/menu.php'); ?>
-<!-- Include Navigation END -->
-
-</header>
-<!-- Header END -->
-
-<!-- Main START -->
-<main>
-
-    <!-- container START -->
-    <div class="container">
-
-    <?php
-        if(isset($_REQUEST['page'])){
-            $page = $_REQUEST['page'];
-            switch ($page) {
-                case 'tsm':
-                    include "transaksi_surat_masuk.php";
-                    break;
-                case 'ctk':
-                    include "cetak_disposisi.php";
-                    break;
-                case 'tsk':
-                    include "transaksi_surat_keluar.php";
-                    break;
-                case 'asm':
-                    include "agenda_surat_masuk.php";
-                    break;
-                case 'ask':
-                    include "agenda_surat_keluar.php";
-                    break;
-                case 'ref':
-                    include "referensi.php";
-                    break;
-                case 'sett':
-                    include "pengaturan.php";
-                    break;
-                case 'pro':
-                    include "profil.php";
-                    break;
-                case 'gsm':
-                    include "galeri_sm.php";
-                    break;
-                case 'gsk':
-                    include "galeri_sk.php";
-                    break;
-            }
-        } else {
-    ?>
-        <!-- Row START -->
-        <div class="row">
-
-            <!-- Include Header Instansi START -->
-            <?php include('include/header_instansi.php'); ?>
-            <!-- Include Header Instansi END -->
-
-            <!-- Welcome Message START -->
-            <div class="col s12">
-                <div class="card">
-                    <div class="card-content">
-                        <h4>Selamat Datang <?php echo $_SESSION['nama']; ?></h4>
-                        <p class="description">Anda login sebagai
-                        <?php
-                            if($_SESSION['admin'] == 1){
-                                echo "<strong>ADMIN UTAMA</strong>. Anda memiliki akses penuh terhadap sistem.";
-                            } elseif($_SESSION['admin'] == 2){
-                                echo "<strong>ADMINISTRATOR</strong>. Berikut adalah statistik data yang tersimpan dalam sistem.";
-                            } else {
-                                echo "<strong>Petugas Disposisi</strong>. Berikut adalah statistik data yang 
-                                tersimpan dalam sistem.";
-
-                            }?></p>
-                    </div>
-                </div>
-            </div>
-            <!-- Welcome Message END -->
-
+    <main>
+        <div class="container">
             <?php
-                //menghitung jumlah surat masuk
-                $count1 = mysqli_num_rows(mysqli_query($config, "SELECT * FROM tbl_surat_masuk"));
+            // Handle page inclusion based on request
+            if (isset($_GET['page']) && includePage($_GET['page'])) {
+                // Page has been included via the function
+            } else {
+                // Show dashboard
+                ?>
+                <div class="row">
+                    <!-- Include Header Instansi -->
+                    <?php include('include/header_instansi.php'); ?>
 
-                //menghitung jumlah surat masuk
-                $count2 = mysqli_num_rows(mysqli_query($config, "SELECT * FROM tbl_surat_keluar"));
-
-                //menghitung jumlah surat masuk
-                $count3 = mysqli_num_rows(mysqli_query($config, "SELECT * FROM tbl_disposisi"));
-
-                //menghitung jumlah klasifikasi
-                $count4 = mysqli_num_rows(mysqli_query($config, "SELECT * FROM tbl_klasifikasi"));
-
-                //menghitung jumlah pengguna
-                $count5 = mysqli_num_rows(mysqli_query($config, "SELECT * FROM tbl_user"));
-            ?>
-
-            <!-- Info Statistic START -->
-            <div class="col s12 m4">
-                <div class="card pink">
-                    <div class="card-content">
-                        <span class="card-title white-text"><i class="material-icons md-36">mail</i> Jumlah Surat Masuk</span>
-                        <?php echo '<h5 class="white-text link">'.$count1.' Surat Masuk</h5>'; ?>
+                    <!-- Welcome Message -->
+                    <div class="col s12">
+                        <div class="card">
+                            <div class="card-content">
+                                <h4>Selamat Datang <?php echo htmlspecialchars($_SESSION['nama']); ?></h4>
+                                <p class="description">
+                                    Anda login sebagai
+                                    <strong><?php echo getUserRole($_SESSION['admin'], $_SESSION['nama']); ?></strong>
+                                </p>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
 
-            <div class="col s12 m4">
-                <div class="card cyan darken-1">
-                    <div class="card-content">
-                        <span class="card-title white-text"><i class="material-icons md-36">drafts</i> Jumlah Surat Keluar</span>
-                        <?php echo '<h5 class="white-text link">'.$count2.' Surat Keluar</h5>'; ?>
-                    </div>
-                </div>
-            </div>
+                    <!-- Statistics Cards -->
+                    <?php
+                    // Get counts from database
+                    $counts = [
+                        'Surat Masuk' => ['count' => getCount('tbl_surat_masuk'), 'desc' => 'Surat Masuk', 'color' => 'pink', 'icon' => 'mail'],
+                        'Surat Keluar' => ['count' => getCount('tbl_surat_keluar'), 'desc' => 'Surat Keluar', 'color' => 'cyan darken-1', 'icon' => 'drafts'],
+                        'Disposisi' => ['count' => getCount('tbl_disposisi'), 'desc' => 'Disposisi', 'color' => 'green darken-5', 'icon' => 'description'],
+                        'Klasifikasi Surat' => ['count' => getCount('tbl_klasifikasi'), 'desc' => 'Klasifikasi Surat', 'color' => 'deep-orange', 'icon' => 'class']
+                    ];
 
-            <div class="col s12 m4">
-                <div class="card green darken-5">
-                    <div class="card-content">
-                        <span class="card-title white-text"><i class="material-icons md-36">description</i> Jumlah Disposisi</span>
-                        <?php echo '<h5 class="white-text link">'.$count3.' Disposisi</h5>'; ?>
-                    </div>
-                </div>
-            </div>
+                    // Render statistic cards
+                    foreach ($counts as $title => $data) {
+                        renderStatCard(
+                            "Jumlah $title",
+                            $data['count'],
+                            $data['desc'],
+                            $data['color'],
+                            $data['icon']
+                        );
+                    }
 
-            <div class="col s12 m4">
-                <div class="card deep-orange">
-                    <div class="card-content">
-                        <span class="card-title white-text"><i class="material-icons md-36">class</i> Jumlah Klasifikasi Surat</span>
-                        <?php echo '<h5 class="white-text link">'.$count4.' Klasifikasi Surat</h5>'; ?>
-                    </div>
+                    // Show user count only for admin users
+                    if ($_SESSION['admin'] == 1 || $_SESSION['admin'] == 2) {
+                        $userCount = getCount('tbl_user');
+                        renderStatCard(
+                            'Jumlah Pengguna',
+                            $userCount,
+                            'Pengguna',
+                            'red accent-2',
+                            'people'
+                        );
+                    }
+                    ?>
                 </div>
-            </div>
-
-        <?php
-            if($_SESSION['id_user'] == 1 || $_SESSION['admin'] == 2){?>
-            <div class="col s12 m4">
-                <div class="card red accent-2">
-                    <div class="card-content">
-                        <span class="card-title white-text"><i class="material-icons md-36">people</i> Jumlah Pengguna</span>
-                        <?php echo '<h5 class="white-text link">'.$count5.' Pengguna</h5>'; ?>
-                    </div>
-                </div>
-            </div>
-            <!-- Info Statistic START -->
-        <?php
-            }
-        ?>
-
+            <?php } ?>
         </div>
-        <!-- Row END -->
-    <?php
-        }
-    ?>
-    </div>
-    <!-- container END -->
+    </main>
 
-</main>
-<!-- Main END -->
-
-<!-- Include Footer START -->
-<?php include('include/footer.php'); ?>
-<!-- Include Footer END -->
-
+    <!-- Include Footer -->
+    <?php include('include/footer.php'); ?>
 </body>
-<!-- Body END -->
 
 </html>
-
-<?php
-    }
-?>

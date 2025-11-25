@@ -1,152 +1,214 @@
 <?php
-    //cek session
-    if(empty($_SESSION['admin'])){
-        $_SESSION['err'] = '<center>Anda harus login terlebih dahulu!</center>';
-        header("Location: ./");
-        die();
+// Check session
+if (empty($_SESSION['admin'])) {
+    $_SESSION['err'] = '<center>Anda harus login terlebih dahulu!</center>';
+    header("Location: ./");
+    exit();
+}
+
+if (isset($_REQUEST['submit'])) {
+    handleDeleteSubmission();
+} else {
+    displayDeleteConfirmation();
+}
+
+/**
+ * Handle delete submission
+ */
+function handleDeleteSubmission()
+{
+    global $config;
+
+    $id_surat = mysqli_real_escape_string($config, $_REQUEST['id_surat']);
+
+    // Check user permissions and get surat data
+    $suratData = getSuratDataWithPermissionCheck($id_surat);
+    if (!$suratData) {
+        return;
+    }
+
+    // Perform deletion
+    if (deleteSuratMasuk($id_surat, $suratData['file'])) {
+        $_SESSION['succDel'] = 'SUKSES! Data berhasil dihapus';
+        header("Location: ./admin.php?page=tsm");
+        exit();
     } else {
+        $_SESSION['errQ'] = 'ERROR! Ada masalah dengan query';
+        header("Location: ./admin.php?page=tsm&act=del&id_surat=" . $id_surat);
+        exit();
+    }
+}
 
-        if(isset($_SESSION['errQ'])){
-            $errQ = $_SESSION['errQ'];
-            echo '<div id="alert-message" class="row jarak-card">
-                    <div class="col m12">
-                        <div class="card red lighten-5">
-                            <div class="card-content notif">
-                                <span class="card-title red-text"><i class="material-icons md-36">clear</i> '.$errQ.'</span>
-                            </div>
-                        </div>
+/**
+ * Get surat data with permission check
+ */
+function getSuratDataWithPermissionCheck($id_surat)
+{
+    global $config;
+
+    $query = mysqli_query($config, "SELECT * FROM tbl_surat_masuk WHERE id_surat='$id_surat'");
+
+    if (!$query || mysqli_num_rows($query) == 0) {
+        echo '<script>alert("Data tidak ditemukan"); window.location.href="./admin.php?page=tsm";</script>';
+        return false;
+    }
+
+    $suratData = mysqli_fetch_assoc($query);
+
+    // Check user permissions
+    if ($_SESSION['id_user'] != $suratData['id_user'] && $_SESSION['id_user'] != 1) {
+        echo '<script>
+                alert("ERROR! Anda tidak memiliki hak akses untuk menghapus data ini");
+                window.location.href="./admin.php?page=tsm";
+              </script>';
+        return false;
+    }
+
+    return $suratData;
+}
+
+/**
+ * Delete surat masuk and related data
+ */
+function deleteSuratMasuk($id_surat, $fileName)
+{
+    global $config;
+
+    // Delete file if exists
+    if (!empty($fileName) && file_exists("upload/surat_masuk/" . $fileName)) {
+        unlink("upload/surat_masuk/" . $fileName);
+    }
+
+    // Delete from surat_masuk table
+    $query1 = mysqli_query($config, "DELETE FROM tbl_surat_masuk WHERE id_surat='$id_surat'");
+
+    // Delete from disposisi table
+    $query2 = mysqli_query($config, "DELETE FROM tbl_disposisi WHERE id_surat='$id_surat'");
+
+    return $query1 && $query2;
+}
+
+/**
+ * Display delete confirmation
+ */
+function displayDeleteConfirmation()
+{
+    global $config;
+
+    $id_surat = mysqli_real_escape_string($config, $_REQUEST['id_surat']);
+    $suratData = getSuratDataWithPermissionCheck($id_surat);
+
+    if (!$suratData) {
+        return;
+    }
+
+    displayErrorMessage();
+    displayConfirmationForm($suratData);
+}
+
+/**
+ * Display error message if exists
+ */
+function displayErrorMessage()
+{
+    if (isset($_SESSION['errQ'])) {
+        $errQ = $_SESSION['errQ'];
+        echo '
+        <div id="alert-message" class="row jarak-card">
+            <div class="col m12">
+                <div class="card red lighten-5">
+                    <div class="card-content notif">
+                        <span class="card-title red-text">
+                            <i class="material-icons md-36">clear</i> ' . htmlspecialchars($errQ) . '
+                        </span>
                     </div>
-                </div>';
-            unset($_SESSION['errQ']);
-        }
-
-    	$id_surat = mysqli_real_escape_string($config, $_REQUEST['id_surat']);
-    	$query = mysqli_query($config, "SELECT * FROM tbl_surat_masuk WHERE id_surat='$id_surat'");
-
-    	if(mysqli_num_rows($query) > 0){
-            $no = 1;
-            while($row = mysqli_fetch_array($query)){
-
-            if($_SESSION['id_user'] != $row['id_user'] AND $_SESSION['id_user'] != 1){
-                echo '<script language="javascript">
-                        window.alert("ERROR! Anda tidak memiliki hak akses untuk menghapus data ini");
-                        window.location.href="./admin.php?page=tsm";
-                      </script>';
-            } else {
-
-    		  echo '
-                <!-- Row form Start -->
-				<div class="row jarak-card">
-				    <div class="col m12">
-                    <div class="card">
-                        <div class="card-content">
-				        <table>
-				            <thead class="red lighten-5 red-text">
-				                <div class="confir red-text"><i class="material-icons md-36">error_outline</i>
-				                Apakah Anda yakin akan menghapus data ini?</div>
-				            </thead>
-
-				            <tbody>
-				                <tr>
-				                    <td width="13%">No. Agenda</td>
-				                    <td width="1%">:</td>
-				                    <td width="86%">'.$row['no_agenda'].'</td>
-				                </tr>
-				                <tr>
-				                    <td width="13%">Kode Klasifikasi</td>
-				                    <td width="1%">:</td>
-				                    <td width="86%">'.$row['kode'].'</td>
-				                </tr>
-                                <td width="13%">Indeks Berkas</td>
-                                <td width="1%">:</td>
-                                <td width="86%">'.$row['indeks'].'</td>
-                                </tr>
-    			                <tr>
-    		                    <td width="13%">No. Isi</td>
-    		                    <td width="1%">:</td>
-    		                    <td width="86%">'.$row['isi'].'</td>
-    			                </tr>
-    			                <tr>
-    			                    <td width="13%">File</td>
-    			                    <td width="1%">:</td>
-    			                    <td width="86%">';
-                                    if(!empty($row['file'])){
-                                        echo ' <a class="blue-text" href="?page=gsm&act=fsm&id_surat='.$row['id_surat'].'">'.$row['file'].'</a>';
-                                    } else {
-                                        echo ' Tidak ada file yang diupload';
-                                    } echo '</td>
-    			                </tr>
-    			                <tr>
-    			                    <td width="13%">Asal Surat</td>
-    			                    <td width="1%">:</td>
-    			                    <td width="86%">'.$row['asal_surat'].'</td>
-    			                </tr>
-    			                <tr>
-    			                    <td width="13%">No. Surat</td>
-    			                    <td width="1%">:</td>
-    			                    <td width="86%">'.$row['no_surat'].'</td>
-    			                </tr>
-    			                <tr>
-    			                    <td width="13%">Tanggal Surat</td>
-    			                    <td width="1%">:</td>
-    			                    <td width="86%">'.indoDate($row['tgl_surat']).'</td>
-    			                </tr>
-                                <tr>
-                                    <td width="13%">Keterangan</td>
-                                    <td width="1%">:</td>
-                                    <td width="86%">'.$row['keterangan'].'</td>
-                                </tr>
-    			            </tbody>
-    			   		</table>
-                        </div>
-                        <div class="card-action">
-        	                <a href="?page=tsm&act=del&submit=yes&id_surat='.$row['id_surat'].'" class="btn-large deep-orange waves-effect waves-light white-text">HAPUS <i class="material-icons">delete</i></a>
-        	                <a href="?page=tsm" class="btn-large blue waves-effect waves-light white-text">BATAL <i class="material-icons">clear</i></a>
-    	                </div>
-    	            </div>
                 </div>
             </div>
-            <!-- Row form END -->';
+        </div>';
+        unset($_SESSION['errQ']);
+    }
+}
 
-            	if(isset($_REQUEST['submit'])){
-            		$id_surat = $_REQUEST['id_surat'];
+/**
+ * Display confirmation form
+ */
+function displayConfirmationForm($suratData)
+{
+    ?>
+    <!-- Row form Start -->
+    <div class="row jarak-card">
+        <div class="col m12">
+            <div class="card">
+                <div class="card-content">
+                    <table>
+                        <thead class="red lighten-5 red-text">
+                            <tr>
+                                <th colspan="3">
+                                    <div class="confir red-text">
+                                        <i class="material-icons md-36">error_outline</i>
+                                        Apakah Anda yakin akan menghapus data ini?
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php displaySuratDetails($suratData); ?>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-action">
+                    <a href="?page=tsm&act=del&submit=yes&id_surat=<?php echo $suratData['id_surat']; ?>"
+                        class="btn-large deep-orange waves-effect waves-light white-text">
+                        HAPUS <i class="material-icons">delete</i>
+                    </a>
+                    <a href="?page=tsm" class="btn-large blue waves-effect waves-light white-text">
+                        BATAL <i class="material-icons">clear</i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Row form END -->
+    <?php
+}
 
-                    //jika ada file akan mengekseskusi script dibawah ini
-                    if(!empty($row['file'])){
-                        unlink("upload/surat_masuk/".$row['file']);
-                        $query = mysqli_query($config, "DELETE FROM tbl_surat_masuk WHERE id_surat='$id_surat'");
-                        $query2 = mysqli_query($config, "DELETE FROM tbl_disposisi WHERE id_surat='$id_surat'");
+/**
+ * Display surat details
+ */
+function displaySuratDetails($suratData)
+{
+    $details = [
+        'No. Agenda' => htmlspecialchars($suratData['no_agenda']),
+        'Kode Klasifikasi' => htmlspecialchars($suratData['kode']),
+        'Indeks Berkas' => htmlspecialchars($suratData['indeks']),
+        'Isi Ringkas' => htmlspecialchars($suratData['isi']),
+        'File' => getFileDisplay($suratData),
+        'Asal Surat' => htmlspecialchars($suratData['asal_surat']),
+        'No. Surat' => htmlspecialchars($suratData['no_surat']),
+        'Tanggal Surat' => indoDate($suratData['tgl_surat']),
+        'Keterangan' => htmlspecialchars($suratData['keterangan'])
+    ];
 
-                		if($query == true){
-                            $_SESSION['succDel'] = 'SUKSES! Data berhasil dihapus<br/>';
-                            header("Location: ./admin.php?page=tsm");
-                            die();
-                		} else {
-                            $_SESSION['errQ'] = 'ERROR! Ada masalah dengan query';
-                            echo '<script language="javascript">
-                                    window.location.href="./admin.php?page=tsm&act=del&id_surat='.$id_surat.'";
-                                  </script>';
-                		}
-                	} else {
+    foreach ($details as $label => $value) {
+        echo '
+        <tr>
+            <td width="13%">' . $label . '</td>
+            <td width="1%">:</td>
+            <td width="86%">' . $value . '</td>
+        </tr>';
+    }
+}
 
-                        //jika tidak ada file akan mengekseskusi script dibawah ini
-                        $query = mysqli_query($config, "DELETE FROM tbl_surat_masuk WHERE id_surat='$id_surat'");
-                        $query2 = mysqli_query($config, "DELETE FROM tbl_disposisi WHERE id_surat='$id_surat'");
-
-                        if($query == true){
-                            $_SESSION['succDel'] = 'SUKSES! Data berhasil dihapus<br/>';
-                            header("Location: ./admin.php?page=tsm");
-                            die();
-                        } else {
-                            $_SESSION['errQ'] = 'ERROR! Ada masalah dengan query';
-                            echo '<script language="javascript">
-                                    window.location.href="./admin.php?page=tsm&act=del&id_surat='.$id_surat.'";
-                                  </script>';
-                        }
-                    }
-                }
-    	    }
-        }
+/**
+ * Get file display information
+ */
+function getFileDisplay($suratData)
+{
+    if (!empty($suratData['file'])) {
+        return '<a class="blue-text" href="?page=gsm&act=fsm&id_surat=' . $suratData['id_surat'] . '">' .
+            htmlspecialchars($suratData['file']) . '</a>';
+    } else {
+        return 'Tidak ada file yang diupload';
     }
 }
 ?>

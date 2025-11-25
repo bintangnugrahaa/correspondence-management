@@ -1,31 +1,31 @@
 <?php
-    //cek session
-    if(empty($_SESSION['admin'])){
-        $_SESSION['err'] = '<center>Anda harus login terlebih dahulu!</center>';
-        header("Location: ./");
-        die();
+//cek session
+if (empty($_SESSION['admin'])) {
+    $_SESSION['err'] = '<center>Anda harus login terlebih dahulu!</center>';
+    header("Location: ./");
+    die();
+} else {
+
+    if (isset($_REQUEST['act'])) {
+        $act = $_REQUEST['act'];
+        switch ($act) {
+            case 'fsk':
+                include "file_sk.php";
+                break;
+        }
     } else {
 
-        if(isset($_REQUEST['act'])){
-            $act = $_REQUEST['act'];
-            switch ($act) {
-                case 'fsk':
-                    include "file_sk.php";
-                    break;
-            }
+        //pagging
+        $limit = 8;
+        $pg = @$_GET['pg'];
+        if (empty($pg)) {
+            $curr = 0;
+            $pg = 1;
         } else {
+            $curr = ($pg - 1) * $limit;
+        }
 
-            //pagging
-            $limit = 8;
-            $pg = @$_GET['pg'];
-                if(empty($pg)){
-                    $curr = 0;
-                    $pg = 1;
-                } else {
-                    $curr = ($pg - 1) * $limit;
-                }
-
-                echo '
+        echo '
                     <!-- Row Start -->
                     <div class="row">
                         <!-- Secondary Nav START -->
@@ -49,19 +49,19 @@
                     <!-- Row form Start -->
                     <div class="row jarak-form">';
 
-                    if(isset($_REQUEST['submit'])){
+        if (isset($_REQUEST['submit'])) {
 
-                        $dari_tanggal = $_REQUEST['dari_tanggal'];
-                        $sampai_tanggal = $_REQUEST['sampai_tanggal'];
+            $dari_tanggal = $_REQUEST['dari_tanggal'];
+            $sampai_tanggal = $_REQUEST['sampai_tanggal'];
 
-                        if($_REQUEST['dari_tanggal'] == "" || $_REQUEST['sampai_tanggal'] == ""){
-                            header("Location: ./admin.php?page=gsk");
-                            die();
-                        } else {
+            if ($_REQUEST['dari_tanggal'] == "" || $_REQUEST['sampai_tanggal'] == "") {
+                header("Location: ./admin.php?page=gsk");
+                die();
+            } else {
 
-                        $query = mysqli_query($config, "SELECT * FROM tbl_surat_keluar WHERE tgl_catat BETWEEN '$dari_tanggal' AND '$sampai_tanggal' ORDER By id_surat DESC LIMIT 10");
+                $query = mysqli_query($config, "SELECT * FROM tbl_surat_keluar WHERE tgl_catat BETWEEN '$dari_tanggal' AND '$sampai_tanggal' ORDER By id_surat DESC LIMIT 10");
 
-                        echo '<!-- Row form Start -->
+                echo '<!-- Row form Start -->
                             <div class="row jarak-form black-text">
                                 <form class="col s12" method="post" action="">
                                     <div class="input-field col s3">
@@ -84,64 +84,65 @@
                             <!-- Row form END -->
 
                             <div class="row agenda">
-                                <div class="col s12"><p class="warna agenda">Galeri file surat keluar antara tanggal <strong>'.indoDate($dari_tanggal).'</strong> sampai dengan tanggal <strong>'.indoDate($sampai_tanggal).'</strong></p>
+                                <div class="col s12"><p class="warna agenda">Galeri file surat keluar antara tanggal <strong>' . indoDate($dari_tanggal) . '</strong> sampai dengan tanggal <strong>' . indoDate($sampai_tanggal) . '</strong></p>
                                 </div>
                             </div>';
 
-                            if(mysqli_num_rows($query) > 0){
-                                while($row = mysqli_fetch_array($query)){
-                                if(empty($row['file'])){
-                                    echo '';
-                                } else {
+                if (mysqli_num_rows($query) > 0) {
+                    while ($row = mysqli_fetch_array($query)) {
+                        if (empty($row['file'])) {
+                            echo '';
+                        } else {
 
-                                    $ekstensi = array('jpg','png','jpeg');
-                                    $ekstensi2 = array('doc','docx');
-                                    $file = $row['file'];
-                                    $x = explode('.', $file);
-                                    $eks = strtolower(end($x));
+                            $ekstensi = array('jpg', 'png', 'jpeg');
+                            $ekstensi2 = array('doc', 'docx');
+                            $file = $row['file'];
+                            $x = explode('.', $file);
+                            $eks = strtolower(end($x));
 
-                                    if(in_array($eks, $ekstensi) == true){
-                                        echo '
+                            if (in_array($eks, $ekstensi) == true) {
+                                echo '
                                             <div class="col m3">
-                                                <img class="galeri materialboxed" data-caption="'.indoDate($row['tgl_catat']).'" src="./upload/surat_keluar/'.$row['file'].'"/>
-                                                <a class="btn light-green darken-1" href="?page=gsk&act=fsk&id_surat='.$row['id_surat'].'">Tampilkan Ukuran Penuh</a>
+                                                <img class="galeri materialboxed" data-caption="' . indoDate($row['tgl_catat']) . '" src="./upload/surat_keluar/' . $row['file'] . '"/>
+                                                <a class="btn light-green darken-1" href="?page=gsk&act=fsk&id_surat=' . $row['id_surat'] . '">Tampilkan Ukuran Penuh</a>
                                             </div>';
-                                    } else {
-
-                                        if(in_array($eks, $ekstensi2) == true){
-                                            echo '
-                                                <div class="col m3">
-                                                    <img class="galeri materialboxed" data-caption="'.indoDate($row['tgl_catat']).'" src="./asset/img/word.png"/>
-                                                    <a class="btn light-green darken-1" href="?page=gsk&act=fsk&id_surat='.$row['id_surat'].'">Lihat Detail File</a>
-                                                </div>';
-                                        } else {
-                                            echo '
-                                                <div class="col m3">
-                                                    <img class="galeri materialboxed" data-caption="'.indoDate($row['tgl_catat']).'" src="./asset/img/pdf.png"/>
-                                                    <a class="btn light-green darken-1" href="?page=gsk&act=fsk&id_surat='.$row['id_surat'].'">Lihat Detail File</a>
-                                                </div>';
-                                        }
-                                    }
-                                }
-                                }
                             } else {
-                                echo '<div class="col m12">
+
+                                if (in_array($eks, $ekstensi2) == true) {
+                                    echo '
+                                                <div class="col m3">
+                                                    <img class="galeri materialboxed" data-caption="' . indoDate($row['tgl_catat']) . '" src="./asset/img/word.png"/>
+                                                    <a class="btn light-green darken-1" href="?page=gsk&act=fsk&id_surat=' . $row['id_surat'] . '">Lihat Detail File</a>
+                                                </div>';
+                                } else {
+                                    echo '
+                                                <div class="col m3">
+                                                    <img class="galeri materialboxed" data-caption="' . indoDate($row['tgl_catat']) . '" src="./asset/img/pdf.png"/>
+                                                    <a class="btn light-green darken-1" href="?page=gsk&act=fsk&id_surat=' . $row['id_surat'] . '">Lihat Detail File</a>
+                                                </div>';
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    echo '<div class="col m12">
                                         <div class="card blue lighten-5">
                                             <div class="card-content notif">
                                                 <span class="card-title lampiran"><center>Tidak ada file lampiran surat keluar yang ditemukan</center></span>
                                             </div>
                                         </div>
                                     </div>';
-                            } echo '
+                }
+                echo '
                                 </div>';
-                            }
-                    } else {
+            }
+        } else {
 
-                        //script untuk menampilkan data
-                        $query = mysqli_query($config, "SELECT * FROM tbl_surat_keluar ORDER BY id_surat DESC LIMIT $curr, $limit");
-                        if(mysqli_num_rows($query) > 0){
+            //script untuk menampilkan data
+            $query = mysqli_query($config, "SELECT * FROM tbl_surat_keluar ORDER BY id_surat DESC LIMIT $curr, $limit");
+            if (mysqli_num_rows($query) > 0) {
 
-                            echo '
+                echo '
                             <!-- Row form Start -->
                             <div class="row jarak-form black-text">
                                 <form class="col s12" method="post" action="">
@@ -162,96 +163,99 @@
                             </div>
                             <!-- Row form END -->';
 
-                            while($row = mysqli_fetch_array($query)){
+                while ($row = mysqli_fetch_array($query)) {
 
-                                if(empty($row['file'])){
-                                    echo '';
-                                } else {
+                    if (empty($row['file'])) {
+                        echo '';
+                    } else {
 
-                                    $ekstensi = array('jpg','png','jpeg');
-                                    $ekstensi2 = array('doc','docx');
-                                    $file = $row['file'];
-                                    $x = explode('.', $file);
-                                    $eks = strtolower(end($x));
+                        $ekstensi = array('jpg', 'png', 'jpeg');
+                        $ekstensi2 = array('doc', 'docx');
+                        $file = $row['file'];
+                        $x = explode('.', $file);
+                        $eks = strtolower(end($x));
 
-                                    if(in_array($eks, $ekstensi) == true){
-                                    echo '
+                        if (in_array($eks, $ekstensi) == true) {
+                            echo '
                                         <div class="col m3">
-                                            <img class="galeri materialboxed" data-caption="'.indoDate($row['tgl_catat']).'" src="./upload/surat_keluar/'.$row['file'].'"/>
-                                            <a class="btn light-green darken-1" href="?page=gsk&act=fsk&id_surat='.$row['id_surat'].'">Tampilkan Ukuran Penuh</a>
+                                            <img class="galeri materialboxed" data-caption="' . indoDate($row['tgl_catat']) . '" src="./upload/surat_keluar/' . $row['file'] . '"/>
+                                            <a class="btn light-green darken-1" href="?page=gsk&act=fsk&id_surat=' . $row['id_surat'] . '">Tampilkan Ukuran Penuh</a>
                                         </div>';
-                                    } else {
-
-                                        if(in_array($eks, $ekstensi2) == true){
-                                        echo '
-                                            <div class="col m3">
-                                                <img class="galeri materialboxed" data-caption="'.indoDate($row['tgl_catat']).'" src="./asset/img/word.png"/>
-                                                <a class="btn light-green darken-1" href="?page=gsk&act=fsk&id_surat='.$row['id_surat'].'">Lihat Detail File</a>
-                                            </div>';
-                                        } else {
-                                            echo '
-                                                <div class="col m3">
-                                                    <img class="galeri materialboxed" data-caption="'.indoDate($row['tgl_catat']).'" src="./asset/img/pdf.png"/>
-                                                    <a class="btn light-green darken-1" href="?page=gsk&act=fsk&id_surat='.$row['id_surat'].'">Lihat Detail File</a>
-                                                </div>';
-                                        }
-                                    }
-                                }
-                            }
                         } else {
-                            echo '<div class="col m12">
+
+                            if (in_array($eks, $ekstensi2) == true) {
+                                echo '
+                                            <div class="col m3">
+                                                <img class="galeri materialboxed" data-caption="' . indoDate($row['tgl_catat']) . '" src="./asset/img/word.png"/>
+                                                <a class="btn light-green darken-1" href="?page=gsk&act=fsk&id_surat=' . $row['id_surat'] . '">Lihat Detail File</a>
+                                            </div>';
+                            } else {
+                                echo '
+                                                <div class="col m3">
+                                                    <img class="galeri materialboxed" data-caption="' . indoDate($row['tgl_catat']) . '" src="./asset/img/pdf.png"/>
+                                                    <a class="btn light-green darken-1" href="?page=gsk&act=fsk&id_surat=' . $row['id_surat'] . '">Lihat Detail File</a>
+                                                </div>';
+                            }
+                        }
+                    }
+                }
+            } else {
+                echo '<div class="col m12">
                                     <div class="card blue lighten-5">
                                         <div class="card-content notif">
                                             <span class="card-title lampiran"><center>Tidak ada data untuk ditampilkan</center></span>
                                         </div>
                                     </div>
                                 </div>';
-                        } echo '
+            }
+            echo '
                         </div>';
 
-                        $query = mysqli_query($config, "SELECT * FROM tbl_surat_keluar");
-                        $cdata = mysqli_num_rows($query);
-                        $cpg = ceil($cdata/$limit);
+            $query = mysqli_query($config, "SELECT * FROM tbl_surat_keluar");
+            $cdata = mysqli_num_rows($query);
+            $cpg = ceil($cdata / $limit);
 
-                        echo '<!-- Pagination START -->
+            echo '<!-- Pagination START -->
                               <ul class="pagination">';
 
-                        if($cdata > $limit ){
+            if ($cdata > $limit) {
 
-                        //first and previous pagging
-                        if($pg > 1){
-                            $prev = $pg - 1;
-                            echo '<li><a href="?page=gsk&pg=1"><i class="material-icons md-48">first_page</i></a></li>
-                                  <li><a href="?page=gsk&pg='.$prev.'"><i class="material-icons md-48">chevron_left</i></a></li>';
-                        } else {
-                            echo '<li class="disabled"><a href=""><i class="material-icons md-48">first_page</i></a></li>
+                //first and previous pagging
+                if ($pg > 1) {
+                    $prev = $pg - 1;
+                    echo '<li><a href="?page=gsk&pg=1"><i class="material-icons md-48">first_page</i></a></li>
+                                  <li><a href="?page=gsk&pg=' . $prev . '"><i class="material-icons md-48">chevron_left</i></a></li>';
+                } else {
+                    echo '<li class="disabled"><a href=""><i class="material-icons md-48">first_page</i></a></li>
                                   <li class="disabled"><a href=""><i class="material-icons md-48">chevron_left</i></a></li>';
-                        }
+                }
 
-                        //looping pagging
-                        for ($i = 1; $i <= $cpg; $i++) {
-                            if ((($i >= $pg - 3) && ($i <= $pg + 3)) || ($i == 1) || ($i == $cpg)) {
-                                if ($i == $pg) echo '<li class="active waves-effect waves-dark"><a href="?page=gsk&pg='.$i.'"> '.$i.' </a></li>';
-                                else echo '<li class="waves-effect waves-dark"><a href="?page=gsk&pg='.$i.'"> '.$i.' </a></li>';
-                            }
-                        }
-
-                        //next and last pagging
-                        if($pg < $cpg){
-                            $next = $pg + 1;
-                            echo '<li><a href="?page=gsk&pg='.$next.'"><i class="material-icons md-48">chevron_right</i></a></li>
-                                  <li><a href="?page=gsk&pg='.$cpg.'"><i class="material-icons md-48">last_page</i></a></li>';
-                        } else {
-                            echo '<li class="disabled"><a href=""><i class="material-icons md-48">chevron_right</i></a></li>
-                                  <li class="disabled"><a href=""><i class="material-icons md-48">last_page</i></a></li>';
-                        }
-                        echo '
-                        </ul>
-                        <!-- Pagination END -->';
-                    } else {
-                        echo '';
+                //looping pagging
+                for ($i = 1; $i <= $cpg; $i++) {
+                    if ((($i >= $pg - 3) && ($i <= $pg + 3)) || ($i == 1) || ($i == $cpg)) {
+                        if ($i == $pg)
+                            echo '<li class="active waves-effect waves-dark"><a href="?page=gsk&pg=' . $i . '"> ' . $i . ' </a></li>';
+                        else
+                            echo '<li class="waves-effect waves-dark"><a href="?page=gsk&pg=' . $i . '"> ' . $i . ' </a></li>';
                     }
                 }
+
+                //next and last pagging
+                if ($pg < $cpg) {
+                    $next = $pg + 1;
+                    echo '<li><a href="?page=gsk&pg=' . $next . '"><i class="material-icons md-48">chevron_right</i></a></li>
+                                  <li><a href="?page=gsk&pg=' . $cpg . '"><i class="material-icons md-48">last_page</i></a></li>';
+                } else {
+                    echo '<li class="disabled"><a href=""><i class="material-icons md-48">chevron_right</i></a></li>
+                                  <li class="disabled"><a href=""><i class="material-icons md-48">last_page</i></a></li>';
+                }
+                echo '
+                        </ul>
+                        <!-- Pagination END -->';
+            } else {
+                echo '';
             }
         }
+    }
+}
 ?>

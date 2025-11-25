@@ -1,20 +1,20 @@
 <?php
-    //cek session
-    if(empty($_SESSION['admin'])){
+//cek session
+if (empty($_SESSION['admin'])) {
 
-        $_SESSION['err'] = '<strong>ERROR!</strong> Anda harus login terlebih dahulu.';
-        header("Location: ./");
-        die();
-    } else {
+    $_SESSION['err'] = '<strong>ERROR!</strong> Anda harus login terlebih dahulu.';
+    header("Location: ./");
+    die();
+} else {
 
-        if($_SESSION['admin'] != 1){
-            echo '<script language="javascript">
+    if ($_SESSION['admin'] != 1) {
+        echo '<script language="javascript">
                     window.alert("ERROR! Anda tidak memiliki hak akses untuk membuka halaman ini");
                     window.location.href="./logout.php";
                   </script>';
-        } else {
+    } else {
 
-          echo '<!-- Row Start -->
+        echo '<!-- Row Start -->
                 <div class="row">
                     <!-- Secondary Nav START -->
                     <div class="col s12">
@@ -34,64 +34,64 @@
                 </div>
                 <!-- Row END -->';
 
-                if(isset($_SESSION['errEmpty'])){
-                    $errEmpty = $_SESSION['errEmpty'];
-                    echo '<div id="alert-message" class="row">
+        if (isset($_SESSION['errEmpty'])) {
+            $errEmpty = $_SESSION['errEmpty'];
+            echo '<div id="alert-message" class="row">
                             <div class="col m12">
                                 <div class="card red lighten-5">
                                     <div class="card-content notif">
-                                        <span class="card-title red-text"><i class="material-icons md-36">clear</i> '.$errEmpty.'</span>
+                                        <span class="card-title red-text"><i class="material-icons md-36">clear</i> ' . $errEmpty . '</span>
                                     </div>
                                 </div>
                             </div>
                         </div>';
-                    unset($_SESSION['errEmpty']);
-                }
-                if(isset($_SESSION['errFormat'])){
-                    $errFormat = $_SESSION['errFormat'];
-                    echo '<div id="alert-message" class="row">
+            unset($_SESSION['errEmpty']);
+        }
+        if (isset($_SESSION['errFormat'])) {
+            $errFormat = $_SESSION['errFormat'];
+            echo '<div id="alert-message" class="row">
                             <div class="col m12">
                                 <div class="card red lighten-5">
                                     <div class="card-content notif">
-                                        <span class="card-title red-text"><i class="material-icons md-36">clear</i> '.$errFormat.'</span>
+                                        <span class="card-title red-text"><i class="material-icons md-36">clear</i> ' . $errFormat . '</span>
                                     </div>
                                 </div>
                             </div>
                         </div>';
-                    unset($_SESSION['errFormat']);
-                }
-                if(isset($_SESSION['errUpload'])){
-                    $errUpload = $_SESSION['errUpload'];
-                    echo '<div id="alert-message" class="row">
+            unset($_SESSION['errFormat']);
+        }
+        if (isset($_SESSION['errUpload'])) {
+            $errUpload = $_SESSION['errUpload'];
+            echo '<div id="alert-message" class="row">
                             <div class="col m12">
                                 <div class="card red lighten-5">
                                     <div class="card-content notif">
-                                        <span class="card-title red-text"><i class="material-icons md-36">clear</i> '.$errUpload.'</span>
+                                        <span class="card-title red-text"><i class="material-icons md-36">clear</i> ' . $errUpload . '</span>
                                     </div>
                                 </div>
                             </div>
                         </div>';
-                    unset($_SESSION['errUpload']);
-                }
-                if(isset($_SESSION['succRestore'])){
-                    $succRestore = $_SESSION['succRestore'];
-                    echo '<div id="alert-message" class="row">
+            unset($_SESSION['errUpload']);
+        }
+        if (isset($_SESSION['succRestore'])) {
+            $succRestore = $_SESSION['succRestore'];
+            echo '<div id="alert-message" class="row">
                             <div class="col m12">
                                 <div class="card green lighten-5">
                                     <div class="card-content notif">
-                                        <span class="card-title green-text"><i class="material-icons md-36">done</i> '.$succRestore.'</span>
+                                        <span class="card-title green-text"><i class="material-icons md-36">done</i> ' . $succRestore . '</span>
                                     </div>
                                 </div>
                             </div>
                         </div>';
-                    unset($_SESSION['succRestore']);
-                }
+            unset($_SESSION['succRestore']);
+        }
 
-                //restore database
-                if(isset($_POST['restore'])){
-                    restore($host, $username, $password, $database, $_FILES['file']);
-                } else {
-                    echo '
+        //restore database
+        if (isset($_POST['restore'])) {
+            restore($host, $username, $password, $database, $_FILES['file']);
+        } else {
+            echo '
 
                     <!-- Row form Start -->
                     <div class="row">
@@ -125,7 +125,7 @@
                             </div>
                         </div>
                     </div>';
-                }
-            }
         }
+    }
+}
 ?>

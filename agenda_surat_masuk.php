@@ -1,12 +1,12 @@
 <?php
-    //cek session
-    if(empty($_SESSION['admin'])){
-        $_SESSION['err'] = '<center>Anda harus login terlebih dahulu!</center>';
-        header("Location: ./");
-        die();
-    } else {
+//cek session
+if (empty($_SESSION['admin'])) {
+    $_SESSION['err'] = '<center>Anda harus login terlebih dahulu!</center>';
+    header("Location: ./");
+    die();
+} else {
 
-        echo '
+    echo '
             <style type="text/css">
                 .hidd {
                     display: none
@@ -62,22 +62,22 @@
                 }
             </style>';
 
-        if(isset($_REQUEST['submit'])){
+    if (isset($_REQUEST['submit'])) {
 
-            $dari_tanggal = $_REQUEST['dari_tanggal'];
-            $sampai_tanggal = $_REQUEST['sampai_tanggal'];
+        $dari_tanggal = $_REQUEST['dari_tanggal'];
+        $sampai_tanggal = $_REQUEST['sampai_tanggal'];
 
-            if($_REQUEST['dari_tanggal'] == "" || $_REQUEST['sampai_tanggal'] == ""){
-                header("Location: ./admin.php?page=asm");
-                die();
-            } else {
+        if ($_REQUEST['dari_tanggal'] == "" || $_REQUEST['sampai_tanggal'] == "") {
+            header("Location: ./admin.php?page=asm");
+            die();
+        } else {
 
-                $query = mysqli_query($config, "SELECT * FROM tbl_surat_masuk WHERE tgl_diterima BETWEEN '$dari_tanggal' AND '$sampai_tanggal'");
+            $query = mysqli_query($config, "SELECT * FROM tbl_surat_masuk WHERE tgl_diterima BETWEEN '$dari_tanggal' AND '$sampai_tanggal'");
 
-                $query2 = mysqli_query($config, "SELECT nama FROM tbl_instansi");
-                list($nama) = mysqli_fetch_array($query2);
+            $query2 = mysqli_query($config, "SELECT nama FROM tbl_instansi");
+            list($nama) = mysqli_fetch_array($query2);
 
-                echo '
+            echo '
                     <!-- SHOW DAFTAR AGENDA -->
                     <!-- Row Start -->
                     <div class="row">
@@ -121,23 +121,23 @@
 
                     <div class="row agenda">
                     <div class="disp hidd">';
-                        $query2 = mysqli_query($config, "SELECT institusi, nama, status, alamat, logo FROM tbl_instansi");
-                        list($institusi, $nama, $status, $alamat, $logo) = mysqli_fetch_array($query2);
-                            echo '<img class="logodisp" src="./upload/'.$logo.'"/>';
+            $query2 = mysqli_query($config, "SELECT institusi, nama, status, alamat, logo FROM tbl_instansi");
+            list($institusi, $nama, $status, $alamat, $logo) = mysqli_fetch_array($query2);
+            echo '<img class="logodisp" src="./upload/' . $logo . '"/>';
 
-                            echo '<h6 class="up">'.$institusi.'</h6>';
+            echo '<h6 class="up">' . $institusi . '</h6>';
 
-                            echo '<h5 class="nama" id="nama">'.$nama.'</h5><br/>';
+            echo '<h5 class="nama" id="nama">' . $nama . '</h5><br/>';
 
-                            echo '<h6 class="status">'.$status.'</h6>';
+            echo '<h6 class="status">' . $status . '</h6>';
 
-                            echo '<span id="alamat">'.$alamat.'</span>
+            echo '<span id="alamat">' . $alamat . '</span>
 
                     </div>
                     <div class="separator"></div>
                     <h5 class="hid">AGENDA SURAT MASUK</h5>
                         <div class="col s10">
-                            <p class="warna agenda">Agenda Surat Masuk dari tanggal <strong>'.indoDate($dari_tanggal).'</strong> sampai dengan tanggal <strong>'.indoDate($sampai_tanggal).'</strong></p>
+                            <p class="warna agenda">Agenda Surat Masuk dari tanggal <strong>' . indoDate($dari_tanggal) . '</strong> sampai dengan tanggal <strong>' . indoDate($sampai_tanggal) . '</strong></p>
                         </div>
                         <div class="col s2">
                             <button type="submit" onClick="window.print()" class="btn-large deep-orange waves-effect waves-light right">CETAK <i class="material-icons">print</i></button>
@@ -162,41 +162,42 @@
 
                             <tbody>';
 
-                            if(mysqli_num_rows($query) > 0){
-                                $no = 0;
-                                while($row = mysqli_fetch_array($query)){
-                                 echo '
+            if (mysqli_num_rows($query) > 0) {
+                $no = 0;
+                while ($row = mysqli_fetch_array($query)) {
+                    echo '
                                  <tr>
-                                        <td>'.$row['no_agenda'].'</td>
-                                        <td>'.$row['kode'].'</td>
-                                        <td>'.$row['isi'].'</td>
-                                        <td>'.$row['asal_surat'].'</td>
-                                        <td>'.$row['no_surat'].'</td>
-                                        <td>'.indoDate($row['tgl_surat']).'</td>
+                                        <td>' . $row['no_agenda'] . '</td>
+                                        <td>' . $row['kode'] . '</td>
+                                        <td>' . $row['isi'] . '</td>
+                                        <td>' . $row['asal_surat'] . '</td>
+                                        <td>' . $row['no_surat'] . '</td>
+                                        <td>' . indoDate($row['tgl_surat']) . '</td>
                                         <td>';
 
-                                        $id_user = $row['id_user'];
-                                        $query3 = mysqli_query($config, "SELECT nama FROM tbl_user WHERE id_user='$id_user'");
-                                        list($nama) = mysqli_fetch_array($query3);{
-                                            $row['id_user'] = ''.$nama.'';
-                                        }
+                    $id_user = $row['id_user'];
+                    $query3 = mysqli_query($config, "SELECT nama FROM tbl_user WHERE id_user='$id_user'");
+                    list($nama) = mysqli_fetch_array($query3); {
+                        $row['id_user'] = '' . $nama . '';
+                    }
 
-                                        echo ''.$row['id_user'].'</td>
-                                        <td>'.indoDate($row['tgl_diterima']).'</td>
+                    echo '' . $row['id_user'] . '</td>
+                                        <td>' . indoDate($row['tgl_diterima']) . '</td>
                                         <td></td>
-                                        <td>'.$row['keterangan'].'';
-                                  echo '</td>
+                                        <td>' . $row['keterangan'] . '';
+                    echo '</td>
                                 </tr>';
-                                }
-                            } else {
-                                echo '<tr><td colspan="9"><center><p class="add">Tidak ada agenda surat</p></center></td></tr>';
-                            } echo '
+                }
+            } else {
+                echo '<tr><td colspan="9"><center><p class="add">Tidak ada agenda surat</p></center></td></tr>';
+            }
+            echo '
                         </tbody></table>
                     </div>';
-            }
-        } else {
+        }
+    } else {
 
-            echo '
+        echo '
                 <!-- Row Start -->
                 <div class="row">
                     <!-- Secondary Nav START -->
@@ -236,6 +237,6 @@
                     </form>
                 </div>
                 <!-- Row form END -->';
-        }
     }
+}
 ?>

@@ -1,278 +1,406 @@
 <?php
-    //cek session
-    if(empty($_SESSION['admin'])){
-        $_SESSION['err'] = '<strong>ERROR!</strong> Anda harus login terlebih dahulu.';
-        header("Location: ./");
-        die();
-    } else {
+// Check session
+if (empty($_SESSION['admin'])) {
+    $_SESSION['err'] = '<strong>ERROR!</strong> Anda harus login terlebih dahulu.';
+    header("Location: ./");
+    exit();
+}
 
-        echo '
-        <style type="text/css">
+displayPrintPage();
+
+/**
+ * Display print page for disposisi
+ */
+function displayPrintPage()
+{
+    global $config;
+
+    $id_surat = mysqli_real_escape_string($config, $_REQUEST['id_surat']);
+    $suratData = getSuratData($id_surat);
+
+    if (!$suratData) {
+        echo '<script>alert("Data surat tidak ditemukan"); window.close();</script>';
+        return;
+    }
+
+    $instansiData = getInstansiData();
+    $disposisiData = getDisposisiData($id_surat);
+
+    outputPrintPage($instansiData, $suratData, $disposisiData);
+}
+
+/**
+ * Get surat data from database
+ */
+function getSuratData($id_surat)
+{
+    global $config;
+
+    $query = mysqli_query($config, "SELECT * FROM tbl_surat_masuk WHERE id_surat='$id_surat'");
+    return ($query && mysqli_num_rows($query) > 0) ? mysqli_fetch_assoc($query) : false;
+}
+
+/**
+ * Get instansi data from database
+ */
+function getInstansiData()
+{
+    global $config;
+
+    $query = mysqli_query($config, "SELECT institusi, nama, status, alamat, logo, kepsek, nip FROM tbl_instansi LIMIT 1");
+    return ($query && mysqli_num_rows($query) > 0) ? mysqli_fetch_assoc($query) : [];
+}
+
+/**
+ * Get disposisi data from database
+ */
+function getDisposisiData($id_surat)
+{
+    global $config;
+
+    $query = mysqli_query(
+        $config,
+        "SELECT * FROM tbl_disposisi 
+         JOIN tbl_surat_masuk ON tbl_disposisi.id_surat = tbl_surat_masuk.id_surat 
+         WHERE tbl_disposisi.id_surat='$id_surat'"
+    );
+
+    return ($query && mysqli_num_rows($query) > 0) ? mysqli_fetch_assoc($query) : false;
+}
+
+/**
+ * Output the print page
+ */
+function outputPrintPage($instansiData, $suratData, $disposisiData)
+{
+    echo '<!DOCTYPE html>
+    <html>
+    <head>
+        <title>Cetak Disposisi</title>
+        <meta charset="UTF-8">
+        ' . getPrintStyles() . '
+    </head>
+    <body onload="window.print()">
+        ' . getPrintContent($instansiData, $suratData, $disposisiData) . '
+    </body>
+    </html>';
+}
+
+/**
+ * Get print styles
+ */
+function getPrintStyles()
+{
+    return '
+    <style type="text/css">
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #212121;
+            font-size: 14px;
+        }
+        
+        table {
+            background: #fff;
+            padding: 5px;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        tr, td {
+            border: 1px solid #444;
+            padding: 8px;
+            vertical-align: top;
+        }
+        
+        .border-right-none {
+            border-right: none !important;
+        }
+        
+        .border-left-none {
+            border-left: none !important;
+        }
+        
+        .content-height {
+            height: 300px;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 1.5rem 0;
+            margin-bottom: .5rem;
+        }
+        
+        .logo {
+            float: left;
+            position: relative;
+            width: 110px;
+            height: 110px;
+            margin: 0 0 0 1rem;
+        }
+        
+        .signature {
+            width: auto;
+            position: relative;
+            margin: 25px 0 0 75%;
+        }
+        
+        .signature-name {
+            font-weight: bold;
+            text-decoration: underline;
+            margin-bottom: -10px;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .institution-name {
+            font-size: 2.1rem;
+            margin-bottom: -1rem;
+        }
+        
+        .institution-address {
+            font-size: 16px;
+        }
+        
+        .institution-type {
+            text-transform: uppercase;
+            margin: 0;
+            line-height: 2.2rem;
+            font-size: 1.5rem;
+        }
+        
+        .institution-status {
+            margin: 0;
+            font-size: 1.3rem;
+            margin-bottom: .5rem;
+        }
+        
+        .document-title {
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .separator {
+            border-bottom: 2px solid #616161;
+            margin: -1.3rem 0 1.5rem;
+        }
+        
+        .spacing {
+            height: 50px;
+        }
+        
+        .small-spacing {
+            height: 25px;
+        }
+
+        @media print {
+            body {
+                font-size: 12px;
+                color: #212121;
+            }
+            
+            nav {
+                display: none;
+            }
+            
             table {
-                background: #fff;
-                padding: 5px;
+                width: 100%;
+                font-size: 12px;
             }
+            
             tr, td {
-                border: table-cell;
-                border: 1px  solid #444;
+                padding: 8px;
             }
-            tr,td {
-                vertical-align: top!important;
+            
+            .document-title {
+                font-size: 17px;
             }
-            #right {
-                border-right: none !important;
+            
+            .content-height {
+                height: 200px;
             }
-            #left {
-                border-left: none !important;
+            
+            .header {
+                margin: -.5rem 0;
             }
-            .isi {
-                height: 300px!important;
+            
+            .logo {
+                width: 80px;
+                height: 80px;
+                margin: .5rem 0 0 .5rem;
             }
-            .disp {
-                text-align: center;
-                padding: 1.5rem 0;
-                margin-bottom: .5rem;
+            
+            .signature {
+                margin: 15px 0 0 75%;
             }
-            .logodisp {
-                float: left;
-                position: relative;
-                width: 110px;
-                height: 110px;
-                margin: 0 0 0 1rem;
-            }
-            #lead {
-                width: auto;
-                position: relative;
-                margin: 25px 0 0 75%;
-            }
-            .lead {
-                font-weight: bold;
-                text-decoration: underline;
-                margin-bottom: -10px;
-            }
-            .tgh {
-                text-align: center;
-            }
-            #nama {
-                font-size: 2.1rem;
-                margin-bottom: -1rem;
-            }
-            #alamat {
-                font-size: 16px;
-            }
-            .up {
-                text-transform: uppercase;
-                margin: 0;
-                line-height: 2.2rem;
-                font-size: 1.5rem;
-            }
-            .status {
-                margin: 0;
-                font-size: 1.3rem;
-                margin-bottom: .5rem;
-            }
-            #lbr {
+            
+            .institution-name {
                 font-size: 20px;
                 font-weight: bold;
+                text-transform: uppercase;
+                margin: -10px 0 -20px 0;
             }
+            
+            .institution-type {
+                font-size: 17px;
+                font-weight: normal;
+            }
+            
+            .institution-status {
+                font-size: 17px;
+                font-weight: normal;
+                margin-bottom: -.1rem;
+            }
+            
+            .institution-address {
+                margin-top: -15px;
+                font-size: 13px;
+            }
+            
             .separator {
-                border-bottom: 2px solid #616161;
-                margin: -1.3rem 0 1.5rem;
+                margin: -1rem 0 1rem;
             }
-            @media print{
-                body {
-                    font-size: 12px;
-                    color: #212121;
-                }
-                nav {
-                    display: none;
-                }
-                table {
-                    width: 100%;
-                    font-size: 12px;
-                    color: #212121;
-                }
-                tr, td {
-                    border: table-cell;
-                    border: 1px  solid #444;
-                    padding: 8px!important;
+        }
+    </style>';
+}
 
-                }
-                tr,td {
-                    vertical-align: top!important;
-                }
-                #lbr {
-                    font-size: 20px;
-                }
-                .isi {
-                    height: 200px!important;
-                }
-                .tgh {
-                    text-align: center;
-                }
-                .disp {
-                    text-align: center;
-                    margin: -.5rem 0;
-                }
-                .logodisp {
-                    float: left;
-                    position: relative;
-                    width: 80px;
-                    height: 80px;
-                    margin: .5rem 0 0 .5rem;
-                }
-                #lead {
-                    width: auto;
-                    position: relative;
-                    margin: 15px 0 0 75%;
-                }
-                .lead {
-                    font-weight: bold;
-                    text-decoration: underline;
-                    margin-bottom: -10px;
-                }
-                #nama {
-                    font-size: 20px!important;
-                    font-weight: bold;
-                    text-transform: uppercase;
-                    margin: -10px 0 -20px 0;
-                }
-                .up {
-                    font-size: 17px!important;
-                    font-weight: normal;
-                }
-                .status {
-                    font-size: 17px!important;
-                    font-weight: normal;
-                    margin-bottom: -.1rem;
-                }
-                #alamat {
-                    margin-top: -15px;
-                    font-size: 13px;
-                }
-                #lbr {
-                    font-size: 17px;
-                    font-weight: bold;
-                }
-                .separator {
-                    border-bottom: 2px solid #616161;
-                    margin: -1rem 0 1rem;
-                }
+/**
+ * Get print content
+ */
+function getPrintContent($instansiData, $suratData, $disposisiData)
+{
+    return '
+    <!-- Container START -->
+    <div id="colres">
+        ' . getHeaderSection($instansiData) . '
+        ' . getDocumentContent($suratData, $disposisiData) . '
+        ' . getSignatureSection($instansiData) . '
+    </div>
+    <!-- Container END -->';
+}
 
-            }
-        </style>
+/**
+ * Get header section with institution info
+ */
+function getHeaderSection($instansiData)
+{
+    $logo = !empty($instansiData['logo']) ? './upload/' . htmlspecialchars($instansiData['logo']) : '';
+    $institusi = !empty($instansiData['institusi']) ? htmlspecialchars($instansiData['institusi']) : '';
+    $nama = !empty($instansiData['nama']) ? htmlspecialchars($instansiData['nama']) : '';
+    $status = !empty($instansiData['status']) ? htmlspecialchars($instansiData['status']) : '';
+    $alamat = !empty($instansiData['alamat']) ? htmlspecialchars($instansiData['alamat']) : 'Pinggir Rel, Gg . Hj Dul';
 
-        <body onload="window.print()">
+    return '
+    <div class="header">
+        ' . ($logo ? '<img class="logo" src="' . $logo . '"/>' : '') . '
+        <h6 class="institution-type">' . $institusi . '</h6>
+        <h5 class="institution-type institution-name">' . $nama . '</h5><br/>
+        <h6 class="institution-status">' . $status . '</h6>
+        <span class="institution-address">' . $alamat . '</span>
+    </div>
+    <div class="separator"></div>';
+}
 
-        <!-- Container START -->
-            <div id="colres">
-                <div class="disp">';
-                    $query2 = mysqli_query($config, "SELECT institusi, nama, status, alamat, logo FROM tbl_instansi");
-                    list($institusi, $nama, $status, $alamat, $logo) = mysqli_fetch_array($query2);
-                        echo '<img class="logodisp" src="./upload/'.$logo.'"/>';
-                        echo '<h6 class="up">'.$institusi.'</h6>';
-                        echo '<h5 class="up" id="nama">'.$nama.'</h5><br/>';
-                        echo '<h6 class="status">'.$status.'</h6>';
-                        echo '<span id="alamat">Pinggir Rel, Gg . Hj Dul</span>';
+/**
+ * Get document content
+ */
+function getDocumentContent($suratData, $disposisiData)
+{
+    return '
+    <table class="bordered">
+        <tbody>
+            <tr>
+                <td class="text-center document-title" colspan="3">LEMBAR DISPOSISI</td>
+            </tr>
+            ' . getSuratDetails($suratData) . '
+            ' . getDisposisiContent($disposisiData) . '
+        </tbody>
+    </table>';
+}
 
-                    echo '
-                </div>
-                <div class="separator"></div>';
+/**
+ * Get surat details
+ */
+function getSuratDetails($suratData)
+{
+    return '
+    <tr>
+        <td class="border-right-none" width="18%"><strong>Indeks Berkas</strong></td>
+        <td class="border-left-none" style="border-right: none;" width="57%">: ' . htmlspecialchars($suratData['indeks']) . '</td>
+        <td class="border-left-none" width="25%"><strong>Kode</strong> : ' . htmlspecialchars($suratData['kode']) . '</td>
+    </tr>
+    <tr>
+        <td class="border-right-none"><strong>Tanggal Surat</strong></td>
+        <td class="border-left-none" colspan="2">: ' . indoDate($suratData['tgl_surat']) . '</td>
+    </tr>
+    <tr>
+        <td class="border-right-none"><strong>Nomor Surat</strong></td>
+        <td class="border-left-none" colspan="2">: ' . htmlspecialchars($suratData['no_surat']) . '</td>
+    </tr>
+    <tr>
+        <td class="border-right-none"><strong>Asal Surat</strong></td>
+        <td class="border-left-none" colspan="2">: ' . htmlspecialchars($suratData['asal_surat']) . '</td>
+    </tr>
+    <tr>
+        <td class="border-right-none"><strong>Isi Ringkas</strong></td>
+        <td class="border-left-none" colspan="2">: ' . htmlspecialchars($suratData['isi']) . '</td>
+    </tr>
+    <tr>
+        <td class="border-right-none"><strong>Diterima Tanggal</strong></td>
+        <td class="border-left-none" style="border-right: none;">: ' . indoDate($suratData['tgl_diterima']) . '</td>
+        <td class="border-left-none"><strong>No. Agenda</strong> : ' . htmlspecialchars($suratData['no_agenda']) . '</td>
+    </tr>
+    <tr>
+        <td class="border-right-none"><strong>Tanggal Penyelesaian</strong></td>
+        <td class="border-left-none" colspan="2">: </td>
+    </tr>';
+}
 
-                $id_surat = mysqli_real_escape_string($config, $_REQUEST['id_surat']);
-                $query = mysqli_query($config, "SELECT * FROM tbl_surat_masuk WHERE id_surat='$id_surat'");
-
-                if(mysqli_num_rows($query) > 0){
-                $no = 0;
-                while($row = mysqli_fetch_array($query)){
-
-                echo '
-                    <table class="bordered" id="tbl">
-                        <tbody>
-                            <tr>
-                                <td class="tgh" id="lbr" colspan="5">LEMBAR DISPOSISI</td>
-                            </tr>
-                            <tr>
-                                <td id="right" width="18%"><strong>Indeks Berkas</strong></td>
-                                <td id="left" style="border-right: none;" width="57%">: '.$row['indeks'].'</td>
-                                <td id="left" width="25"><strong>Kode</strong> : '.$row['kode'].'</td>
-                            </tr>
-                            <tr><td id="right"><strong>Tanggal Surat</strong></td>
-                                <td id="left" colspan="2">: '.indoDate($row['tgl_surat']).'</td>
-                            </tr>
-                            <tr>
-                                <td id="right"><strong>Nomor Surat</strong></td>
-                                <td id="left" colspan="2">: '.$row['no_surat'].'</td>
-                            </tr>
-                            <tr>
-                                <td id="right"><strong>Asal Surat</strong></td>
-                                <td id="left" colspan="2">: '.$row['asal_surat'].'</td>
-                            </tr>
-                            <tr>
-                                <td id="right"><strong>Isi Ringkas</strong></td>
-                                <td id="left" colspan="2">: '.$row['isi'].'</td>
-                            </tr>
-                            <tr>
-                                <td id="right"><strong>Diterima Tanggal</strong></td>
-                                <td id="left" style="border-right: none;">: '.indoDate($row['tgl_diterima']).'</td>
-                                <td id="left"><strong>No. Agenda</strong> : '.$row['no_agenda'].'</td>
-                            </tr>
-                            <tr>
-                                <td id="right"><strong>Tanggal Penyelesaian</strong></td>
-                                <td id="left" colspan="2">: </td>
-                            </tr>
-                            <tr>';
-                            $query3 = mysqli_query($config, "SELECT * FROM tbl_disposisi JOIN tbl_surat_masuk ON tbl_disposisi.id_surat = tbl_surat_masuk.id_surat WHERE tbl_disposisi.id_surat='$id_surat'");
-
-                            if(mysqli_num_rows($query3) > 0){
-                                $no = 0;
-                                $row = mysqli_fetch_array($query3);{
-                                echo '
-                            <tr class="isi">
-                                <td colspan="2">
-                                    <strong>Isi Disposisi :</strong><br/>'.$row['isi_disposisi'].'
-                                    <div style="height: 50px;"></div>
-                                    <strong>Batas Waktu</strong> : '.indoDate($row['batas_waktu']).'<br/>
-                                    <strong>Sifat</strong> : '.$row['sifat'].'<br/>
-                                    <strong>Catatan</strong> :<br/> '.$row['catatan'].'
-                                    <div style="height: 25px;"></div>
-                                </td>
-                                <td><strong>Diteruskan Kepada</strong> : <br/>'.$row['tujuan'].'</td>
-                            </tr>';
-                                }
-                            } else {
-                                echo '
-                                <tr class="isi">
-                                    <td colspan="2"><strong>Isi Disposisi :</strong>
-                                    </td>
-                                    <td><strong>Diteruskan Kepada</strong> : </td>
-                                </tr>';
-                            }
-                        } echo '
-                </tbody>
-            </table>
-            <div id="lead">
-                <p>Kepala Sekolah</p>
-                <div style="height: 50px;"></div>';
-                $query = mysqli_query($config, "SELECT kepsek, nip FROM tbl_instansi");
-                list($kepsek,$nip) = mysqli_fetch_array($query);
-                if(!empty($kepsek)){
-                    echo '<p class="lead">'.$kepsek.'</p>';
-                } else {
-                    echo '<p class="lead">H. Riza Fachri, S.Kom.</p>';
-                }
-                if(!empty($nip)){
-                    echo '<p>NIP. '.$nip.'</p>';
-                } else {
-                    echo '<p>NIP. -</p>';
-                }
-                echo '
-            </div>
-        </div>
-        <div class="jarak2"></div>
-    <!-- Container END -->
-
-    </body>';
+/**
+ * Get disposisi content
+ */
+function getDisposisiContent($disposisiData)
+{
+    if ($disposisiData) {
+        return '
+        <tr class="content-height">
+            <td colspan="2">
+                <strong>Isi Disposisi :</strong><br/>' . htmlspecialchars($disposisiData['isi_disposisi']) . '
+                <div class="spacing"></div>
+                <strong>Batas Waktu</strong> : ' . indoDate($disposisiData['batas_waktu']) . '<br/>
+                <strong>Sifat</strong> : ' . htmlspecialchars($disposisiData['sifat']) . '<br/>
+                <strong>Catatan</strong> :<br/> ' . htmlspecialchars($disposisiData['catatan']) . '
+                <div class="small-spacing"></div>
+            </td>
+            <td><strong>Diteruskan Kepada</strong> : <br/>' . htmlspecialchars($disposisiData['tujuan']) . '</td>
+        </tr>';
+    } else {
+        return '
+        <tr class="content-height">
+            <td colspan="2"><strong>Isi Disposisi :</strong></td>
+            <td><strong>Diteruskan Kepada</strong> : </td>
+        </tr>';
     }
+}
+
+/**
+ * Get signature section
+ */
+function getSignatureSection($instansiData)
+{
+    $kepsek = !empty($instansiData['kepsek']) ? htmlspecialchars($instansiData['kepsek']) : 'H. Riza Fachri, S.Kom.';
+    $nip = !empty($instansiData['nip']) ? 'NIP. ' . htmlspecialchars($instansiData['nip']) : 'NIP. -';
+
+    return '
+    <div class="signature">
+        <p>Kepala Sekolah</p>
+        <div class="spacing"></div>
+        <p class="signature-name">' . $kepsek . '</p>
+        <p>' . $nip . '</p>
+    </div>
+    <div class="jarak2"></div>';
 }
 ?>
