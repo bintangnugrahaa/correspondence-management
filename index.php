@@ -57,7 +57,7 @@ Website     : https://bintangnugraha.vercel.app/
 
         .bg::before {
             content: '';
-            background-image: url('./asset/img/logo5.png');
+            background-image: url('./asset/img/kampleng.jpg');
             background-repeat: no-repeat;
             background-size: cover;
             background-attachment: fixed;
