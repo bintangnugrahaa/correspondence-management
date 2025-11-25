@@ -2,46 +2,46 @@
 ob_start();
 session_start();
 
-//cek session
+/**
+ * Login Page - Aplikasi Pengarsipan Surat
+ * 
+ * Name        : Aplikasi Manajemen Surat Menyurat
+ * Version     : v1.0.0
+ * Description : Aplikasi untuk mencatat data surat masuk dan keluar secara digital.
+ * Date        : 2019
+ * Developer   : Muhammad Bintang Nugraha
+ * Phone/WA    : +62 851-5534-4998
+ * Email       : muhammadbintangnugraha18@gmail.com
+ * Website     : https://bintangnugraha.vercel.app
+ */
+
+// Check if user is already logged in
 if (isset($_SESSION['admin'])) {
     header("Location: ./admin.php");
-    die();
+    exit();
 }
 
 require_once 'include/config.php';
 require_once 'include/functions.php';
 $config = conn($host, $username, $password, $database);
+
+// Handle login form submission
+if (isset($_REQUEST['submit'])) {
+    handleLogin($config);
+}
 ?>
-<!--
 
-Name        : Aplikasi Sederhana Manajemen Surat Menyurat
-Version     : v1.0.0
-Description : Aplikasi untuk mencatat data surat masuk dan keluar secara digital.
-Date        : 2019
-Developer   : Muhammad Bintang Nugraha
-Phone/WA    : +62 851-5534-4998
-Email       : stareighteen@protonmail.com
-Website     : https://bintangnugraha.vercel.app/
-
--->
-<!doctype html>
-<html lang="en">
-
-<!-- Head START -->
+<!DOCTYPE html>
+<html lang="id">
 
 <head>
-
     <title>Aplikasi Pengarsipan Surat</title>
 
     <!-- Meta START -->
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-    <?php
-    $query = mysqli_query($config, "SELECT logo from tbl_instansi");
-    list($logo) = mysqli_fetch_array($query);
-    echo '<link rel="shortcut icon" href="upload/' . $logo . '">';
-    ?>
+    <?php renderFavicon($config); ?>
     <!-- Meta END -->
 
     <!--[if lt IE 9]>
@@ -185,139 +185,230 @@ Website     : https://bintangnugraha.vercel.app/
         }
     </style>
     <!-- Global style END -->
-
 </head>
-<!-- Head END -->
-
-<!-- Body START -->
 
 <body class="blue-grey lighten-3 bg">
-
     <!-- Container START -->
     <div class="container">
-
         <!-- Row START -->
         <div class="row">
-
             <!-- Col START -->
-            <div class="col s12 m6 offset-m3 offset-m3">
-
+            <div class="col s12 m6 offset-m3">
                 <!-- Box START -->
                 <div class="card-panel z-depth-2" id="login">
-
                     <!-- Row Form START -->
                     <div class="row">
-
-                        <?php
-                        $query = mysqli_query($config, "SELECT * FROM tbl_instansi");
-                        while ($data = mysqli_fetch_array($query)) {
-                            ?>
-                            <!-- Logo and title START -->
-                            <div class="col s12">
-                                <div class="card-content">
-                                    <!-- h5 class="center" id="title">Aplikasi Pengarsipan Surat</h5 -->
-                                    <br><br><?php echo '<img id="logo" src="upload/' . $data['logo'] . '">'; ?>
-                                    <h4 class="center" id="smk">
-                                        <?php echo 'L O G I N'; ?>
-                                    </h4>
-                                    <div class="batas"></div>
-                                </div>
-                            </div>
-                            <!-- Logo and title END -->
-                            <?php
-                        }
-                        ?>
-
-                        <?php
-                        if (isset($_REQUEST['submit'])) {
-
-                            //validasi form kosong
-                            if ($_REQUEST['username'] == "" || $_REQUEST['password'] == "") {
-                                echo '<div class="upss red-text"><i class="material-icons">error_outline</i> <strong>ERROR!</strong> Username dan Password wajib diisi.
-                                <a class="btn-large waves-effect waves-light blue-grey col s11" href="" style="margin: 20px 0 0 5px;"><i class="material-icons md-24">arrow_back</i> Kembali ke login form</a></div>';
-                            } else {
-
-                                $username = trim(htmlspecialchars(mysqli_real_escape_string($config, $_REQUEST['username'])));
-                                $password = trim(htmlspecialchars(mysqli_real_escape_string($config, $_REQUEST['password'])));
-
-                                $query = mysqli_query($config, "SELECT id_user, username, nama, nip, admin FROM tbl_user WHERE username=BINARY'$username' AND password=MD5('$password')");
-
-                                if (mysqli_num_rows($query) > 0) {
-                                    list($id_user, $username, $nama, $nip, $admin) = mysqli_fetch_array($query);
-
-                                    //buat session
-                                    $_SESSION['id_user'] = $id_user;
-                                    $_SESSION['username'] = $username;
-                                    $_SESSION['nama'] = $nama;
-                                    $_SESSION['nip'] = $nip;
-                                    $_SESSION['admin'] = $admin;
-
-                                    header("Location: ./admin.php");
-                                    die();
-                                } else {
-
-                                    //session error
-                                    $_SESSION['errLog'] = '<center>Username & Password tidak ditemukan!</center>';
-                                    header("Location: ./");
-                                    die();
-                                }
-                            }
-                        } else {
-                            ?>
-
-                            <!-- Form START -->
-                            <form class="col s12 m12 offset-4 offset-4" method="POST" action="">
-                                <div class="row">
-                                    <?php
-                                    if (isset($_SESSION['errLog'])) {
-                                        $errLog = $_SESSION['errLog'];
-                                        echo '<div id="alert-message" class="error red lighten-5"><div class="center"><i class="material-icons">error_outline</i> <strong>LOGIN GAGAL!</strong></div>
-                                    ' . $errLog . '</div>';
-                                        unset($_SESSION['errLog']);
-                                    }
-                                    if (isset($_SESSION['err'])) {
-                                        $err = $_SESSION['err'];
-                                        echo '<div id="alert-message" class="error red lighten-5"><div class="center"><i class="material-icons">error_outline</i> <strong>ERROR!</strong></div>
-                                    ' . $err . '</div>';
-                                        unset($_SESSION['err']);
-                                    }
-                                    ?>
-                                </div>
-                                <div class="input-field col s12">
-                                    <i class="material-icons prefix md-prefix">account_circle</i>
-                                    <input id="username" type="text" class="validate" name="username" required>
-                                    <label for="username">Username</label>
-                                </div>
-                                <div class="input-field col s12">
-                                    <i class="material-icons prefix md-prefix">lock</i>
-                                    <input id="password" type="password" class="validate" name="password" required">
-                                    <label for="password">Password</label>
-                                </div>
-                                <div class="input-field col s12">
-                                    <button type="submit" class="btn-large waves-effect waves-light blue-grey col s12"
-                                        name="submit">LOGIN</button>
-                                </div>
-                            </form>
-                            <!-- Form END -->
-                            <?php
-                        }
-                        ?>
+                        <?php renderLoginHeader($config); ?>
+                        <?php renderLoginContent($config); ?>
                     </div>
-                    <!-- Row Form START -->
-
+                    <!-- Row Form END -->
                 </div>
                 <!-- Box END-->
-
             </div>
             <!-- Col END -->
-
         </div>
         <!-- Row END -->
-
     </div>
     <!-- Container END -->
 
     <!-- Javascript START -->
+    <?php renderJavascriptAssets(); ?>
+    <!-- Javascript END -->
+
+    <noscript>
+        <meta http-equiv="refresh" content="0;URL='/enable-javascript.html'" />
+    </noscript>
+</body>
+
+</html>
+
+<?php
+/**
+ * Handle login form submission
+ */
+function handleLogin($config)
+{
+    // Validate required fields
+    if (empty($_REQUEST['username']) || empty($_REQUEST['password'])) {
+        displayLoginError();
+        return;
+    }
+
+    // Sanitize and validate input
+    $username = trim($_REQUEST['username']);
+    $password = trim($_REQUEST['password']);
+
+    // Authenticate user
+    $user = authenticateUser($config, $username, $password);
+
+    if ($user) {
+        createUserSession($user);
+        header("Location: ./admin.php");
+        exit();
+    } else {
+        $_SESSION['errLog'] = '<center>Username & Password tidak ditemukan!</center>';
+        header("Location: ./");
+        exit();
+    }
+}
+
+/**
+ * Authenticate user against database
+ */
+function authenticateUser($config, $username, $password)
+{
+    $username = mysqli_real_escape_string($config, $username);
+
+    $query = mysqli_query(
+        $config,
+        "SELECT id_user, username, nama, nip, admin 
+         FROM tbl_user 
+         WHERE username=BINARY'$username' AND password=MD5('$password')"
+    );
+
+    if ($query && mysqli_num_rows($query) > 0) {
+        return mysqli_fetch_assoc($query);
+    }
+
+    return false;
+}
+
+/**
+ * Create user session after successful login
+ */
+function createUserSession($user)
+{
+    $_SESSION['id_user'] = $user['id_user'];
+    $_SESSION['username'] = $user['username'];
+    $_SESSION['nama'] = $user['nama'];
+    $_SESSION['nip'] = $user['nip'];
+    $_SESSION['admin'] = $user['admin'];
+}
+
+/**
+ * Render favicon from institution data
+ */
+function renderFavicon($config)
+{
+    $query = mysqli_query($config, "SELECT logo from tbl_instansi");
+    if ($query && $data = mysqli_fetch_array($query)) {
+        $logo = htmlspecialchars($data[0], ENT_QUOTES, 'UTF-8');
+        echo '<link rel="shortcut icon" href="upload/' . $logo . '">';
+    }
+}
+
+/**
+ * Render login header with logo and title
+ */
+function renderLoginHeader($config)
+{
+    $query = mysqli_query($config, "SELECT * FROM tbl_instansi");
+    if ($query && $data = mysqli_fetch_array($query)) {
+        ?>
+        <!-- Logo and title START -->
+        <div class="col s12">
+            <div class="card-content">
+                <br><br><img id="logo" src="upload/<?php echo htmlspecialchars($data['logo']); ?>" alt="Logo Institusi">
+                <h4 class="center" id="smk">L O G I N</h4>
+                <div class="batas"></div>
+            </div>
+        </div>
+        <!-- Logo and title END -->
+        <?php
+    }
+}
+
+/**
+ * Render login content (form or error message)
+ */
+function renderLoginContent($config)
+{
+    if (isset($_REQUEST['submit'])) {
+        // Form submission is handled in handleLogin()
+        // This condition is kept for backward compatibility
+    } else {
+        renderLoginForm();
+    }
+}
+
+/**
+ * Display login error with back button
+ */
+function displayLoginError()
+{
+    ?>
+    <div class="upss red-text">
+        <i class="material-icons">error_outline</i> <strong>ERROR!</strong> Username dan Password wajib diisi.
+        <a class="btn-large waves-effect waves-light blue-grey col s11" href="" style="margin: 20px 0 0 5px;">
+            <i class="material-icons md-24">arrow_back</i> Kembali ke login form
+        </a>
+    </div>
+    <?php
+}
+
+/**
+ * Render login form
+ */
+function renderLoginForm()
+{
+    ?>
+    <!-- Form START -->
+    <form class="col s12" method="POST" action="">
+        <div class="row">
+            <?php displayLoginMessages(); ?>
+        </div>
+        <div class="input-field col s12">
+            <i class="material-icons prefix md-prefix">account_circle</i>
+            <input id="username" type="text" class="validate" name="username" required>
+            <label for="username">Username</label>
+        </div>
+        <div class="input-field col s12">
+            <i class="material-icons prefix md-prefix">lock</i>
+            <input id="password" type="password" class="validate" name="password" required>
+            <label for="password">Password</label>
+        </div>
+        <div class="input-field col s12">
+            <button type="submit" class="btn-large waves-effect waves-light blue-grey col s12" name="submit">
+                LOGIN
+            </button>
+        </div>
+    </form>
+    <!-- Form END -->
+    <?php
+}
+
+/**
+ * Display login error/success messages
+ */
+function displayLoginMessages()
+{
+    if (isset($_SESSION['errLog'])) {
+        ?>
+        <div id="alert-message" class="error red lighten-5">
+            <div class="center"><i class="material-icons">error_outline</i> <strong>LOGIN GAGAL!</strong></div>
+            <?php echo $_SESSION['errLog']; ?>
+        </div>
+        <?php
+        unset($_SESSION['errLog']);
+    }
+
+    if (isset($_SESSION['err'])) {
+        ?>
+        <div id="alert-message" class="error red lighten-5">
+            <div class="center"><i class="material-icons">error_outline</i> <strong>ERROR!</strong></div>
+            <?php echo $_SESSION['err']; ?>
+        </div>
+        <?php
+        unset($_SESSION['err']);
+    }
+}
+
+/**
+ * Render JavaScript assets
+ */
+function renderJavascriptAssets()
+{
+    ?>
     <script type="text/javascript" src="asset/js/jquery-2.1.1.min.js"></script>
     <script type="text/javascript" src="asset/js/materialize.min.js"></script>
     <script type="text/javascript" src="asset/js/bootstrap.min.js"></script>
@@ -327,13 +418,5 @@ Website     : https://bintangnugraha.vercel.app/
     <script type="text/javascript">
         $("#alert-message").alert().delay(3000).slideUp('slow');
     </script>
-    <!-- Javascript END -->
-
-    <noscript>
-        <meta http-equiv="refresh" content="0;URL='/enable-javascript.html'" />
-    </noscript>
-
-</body>
-<!-- Body END -->
-
-</html>
+    <?php
+}

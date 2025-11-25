@@ -78,7 +78,7 @@ function outputPrintPage($instansiData, $suratData, $disposisiData)
     <head>
         <title>Cetak Disposisi</title>
         <meta charset="UTF-8">
-        ' . getPrintStyles() . '
+        ' . ctk_getPrintStyles() . '
     </head>
     <body onload="window.print()">
         ' . getPrintContent($instansiData, $suratData, $disposisiData) . '
@@ -89,7 +89,7 @@ function outputPrintPage($instansiData, $suratData, $disposisiData)
 /**
  * Get print styles
  */
-function getPrintStyles()
+function ctk_getPrintStyles()
 {
     return '
     <style type="text/css">

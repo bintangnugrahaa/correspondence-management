@@ -92,45 +92,45 @@ function getCurrentPage()
 function displayNavigationHeader()
 {
     ?>
-        <!-- Row Start -->
-        <div class="row">
-            <!-- Secondary Nav START -->
-            <div class="col s12">
-                <div class="z-depth-1">
-                    <nav class="secondary-nav">
-                        <div class="nav-wrapper blue-grey darken-1">
-                            <div class="col m7">
-                                <ul class="left">
-                                    <li class="waves-effect waves-light hide-on-small-only">
-                                        <a href="?page=tsm" class="judul">
-                                            <i class="material-icons">mail</i> Surat Masuk
-                                        </a>
-                                    </li>
-                                    <li class="waves-effect waves-light">
-                                        <a href="?page=tsm&act=add">
-                                            <i class="material-icons md-24">add_circle</i> Tambah Data
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div class="col m5 hide-on-med-and-down">
-                                <form method="post" action="?page=tsm">
-                                    <div class="input-field round-in-box">
-                                        <input id="search" type="search" name="cari" 
-                                               placeholder="Ketik dan tekan enter mencari data..." required>
-                                        <label for="search"><i class="material-icons md-dark">search</i></label>
-                                        <input type="submit" name="submit" class="hidden">
-                                    </div>
-                                </form>
-                            </div>
+    <!-- Row Start -->
+    <div class="row">
+        <!-- Secondary Nav START -->
+        <div class="col s12">
+            <div class="z-depth-1">
+                <nav class="secondary-nav">
+                    <div class="nav-wrapper blue-grey darken-1">
+                        <div class="col m7">
+                            <ul class="left">
+                                <li class="waves-effect waves-light hide-on-small-only">
+                                    <a href="?page=tsm" class="judul">
+                                        <i class="material-icons">mail</i> Surat Masuk
+                                    </a>
+                                </li>
+                                <li class="waves-effect waves-light">
+                                    <a href="?page=tsm&act=add">
+                                        <i class="material-icons md-24">add_circle</i> Tambah Data
+                                    </a>
+                                </li>
+                            </ul>
                         </div>
-                    </nav>
-                </div>
+                        <div class="col m5 hide-on-med-and-down">
+                            <form method="post" action="?page=tsm">
+                                <div class="input-field round-in-box">
+                                    <input id="search" type="search" name="cari"
+                                        placeholder="Ketik dan tekan enter mencari data..." required>
+                                    <label for="search"><i class="material-icons md-dark">search</i></label>
+                                    <input type="submit" name="submit" class="hidden">
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </nav>
             </div>
-            <!-- Secondary Nav END -->
         </div>
-        <!-- Row END -->
-        <?php
+        <!-- Secondary Nav END -->
+    </div>
+    <!-- Row END -->
+    <?php
 }
 
 /**
@@ -226,35 +226,36 @@ function displaySuratMasukTable($offset = 0, $limit = 10)
          LIMIT $offset, $limit"
     );
     ?>
-    
-        <div class="row jarak-form">
-            <div class="col m12" id="colres">
-                <table class="bordered" id="tbl">
-                    <thead class="blue lighten-4" id="head">
-                        <tr>
-                            <th width="10%">No. Agenda<br/>Kode</th>
-                            <th width="30%">Isi Ringkas<br/>File</th>
-                            <th width="24%">Asal Surat</th>
-                            <th width="18%">No. Surat<br/>Tgl Surat</th>
-                            <th width="18%">
-                                Tindakan 
-                                <span class="right tooltipped" data-position="left" data-tooltip="Atur jumlah data yang ditampilkan">
-                                    <a class="modal-trigger" href="#modal">
-                                        <i class="material-icons" style="color: #333;">settings</i>
-                                    </a>
-                                </span>
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php displaySuratMasukTableContent($query, false); ?>
-                    </tbody>
-                </table>
-            </div>
+
+    <div class="row jarak-form">
+        <div class="col m12" id="colres">
+            <table class="bordered" id="tbl">
+                <thead class="blue lighten-4" id="head">
+                    <tr>
+                        <th width="10%">No. Agenda<br />Kode</th>
+                        <th width="30%">Isi Ringkas<br />File</th>
+                        <th width="24%">Asal Surat</th>
+                        <th width="18%">No. Surat<br />Tgl Surat</th>
+                        <th width="18%">
+                            Tindakan
+                            <span class="right tooltipped" data-position="left"
+                                data-tooltip="Atur jumlah data yang ditampilkan">
+                                <a class="modal-trigger" href="#modal">
+                                    <i class="material-icons" style="color: #333;">settings</i>
+                                </a>
+                            </span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php displaySuratMasukTableContent($query, false); ?>
+                </tbody>
+            </table>
         </div>
-    
-        <?php displayPageLimitModal(); ?>
-        <?php
+    </div>
+
+    <?php displayPageLimitModal(); ?>
+<?php
 }
 
 /**
@@ -280,23 +281,26 @@ function displaySuratMasukTableContent($query, $isSearch = false)
 function displaySuratMasukRow($row)
 {
     ?>
-        <tr>
-            <td><?php echo htmlspecialchars($row['no_agenda']); ?><br/><hr/><?php echo htmlspecialchars($row['kode']); ?></td>
-            <td>
-                <?php echo htmlspecialchars(substr($row['isi'], 0, 200)); ?><br/><br/>
-                <strong>File :</strong>
-                <?php displayFileInfo($row); ?>
-            </td>
-            <td><?php echo htmlspecialchars($row['asal_surat']); ?></td>
-            <td>
-                <?php echo htmlspecialchars($row['no_surat']); ?><br/><hr/>
-                <?php echo indoDate($row['tgl_surat']); ?>
-            </td>
-            <td>
-                <?php displayActionButtons($row); ?>
-            </td>
-        </tr>
-        <?php
+    <tr>
+        <td><?php echo htmlspecialchars($row['no_agenda']); ?><br />
+            <hr /><?php echo htmlspecialchars($row['kode']); ?>
+        </td>
+        <td>
+            <?php echo htmlspecialchars(substr($row['isi'], 0, 200)); ?><br /><br />
+            <strong>File :</strong>
+            <?php displayFileInfo($row); ?>
+        </td>
+        <td><?php echo htmlspecialchars($row['asal_surat']); ?></td>
+        <td>
+            <?php echo htmlspecialchars($row['no_surat']); ?><br />
+            <hr />
+            <?php echo indoDate($row['tgl_surat']); ?>
+        </td>
+        <td>
+            <?php displayActionButtons($row); ?>
+        </td>
+    </tr>
+    <?php
 }
 
 /**
@@ -344,42 +348,42 @@ function displayPageLimitModal()
     $query = mysqli_query($config, "SELECT id_sett, surat_masuk FROM tbl_sett LIMIT 1");
     list($id_sett, $current_limit) = mysqli_fetch_array($query);
     ?>
-    
-        <div id="modal" class="modal">
-            <div class="modal-content white">
-                <h5>Jumlah data yang ditampilkan per halaman</h5>
-                <div class="row">
-                    <form method="post" action="">
-                        <div class="input-field col s12">
-                            <input type="hidden" value="<?php echo $id_sett; ?>" name="id_sett">
-                            <div class="input-field col s1" style="float: left;">
-                                <i class="material-icons prefix md-prefix">looks_one</i>
-                            </div>
-                            <div class="input-field col s11 right" style="margin: -5px 0 20px;">
-                                <select class="browser-default validate" name="surat_masuk" required>
-                                    <option value="<?php echo $current_limit; ?>"><?php echo $current_limit; ?></option>
-                                    <option value="5">5</option>
-                                    <option value="10">10</option>
-                                    <option value="20">20</option>
-                                    <option value="50">50</option>
-                                    <option value="100">100</option>
-                                </select>
-                            </div>
-                            <div class="modal-footer white">
-                                <button type="submit" class="modal-action waves-effect waves-green btn-flat" name="simpan">
-                                    Simpan
-                                </button>
-                                <?php handleLimitUpdate(); ?>
-                                <a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat">
-                                    Batal
-                                </a>
-                            </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content white">
+            <h5>Jumlah data yang ditampilkan per halaman</h5>
+            <div class="row">
+                <form method="post" action="">
+                    <div class="input-field col s12">
+                        <input type="hidden" value="<?php echo $id_sett; ?>" name="id_sett">
+                        <div class="input-field col s1" style="float: left;">
+                            <i class="material-icons prefix md-prefix">looks_one</i>
                         </div>
-                    </form>
-                </div>
+                        <div class="input-field col s11 right" style="margin: -5px 0 20px;">
+                            <select class="browser-default validate" name="surat_masuk" required>
+                                <option value="<?php echo $current_limit; ?>"><?php echo $current_limit; ?></option>
+                                <option value="5">5</option>
+                                <option value="10">10</option>
+                                <option value="20">20</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                        <div class="modal-footer white">
+                            <button type="submit" class="modal-action waves-effect waves-green btn-flat" name="simpan">
+                                Simpan
+                            </button>
+                            <?php handleLimitUpdate(); ?>
+                            <a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat">
+                                Batal
+                            </a>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
-        <?php
+    </div>
+    <?php
 }
 
 /**
@@ -425,14 +429,14 @@ function displayPagination($limit)
         return;
     }
     ?>
-    
-        <br/>
-        <!-- Pagination START -->
-        <ul class="pagination">
-            <?php displayPaginationLinks($currentPage, $totalPages); ?>
-        </ul>
-        <!-- Pagination END -->
-        <?php
+
+    <br />
+    <!-- Pagination START -->
+    <ul class="pagination">
+        <?php displayPaginationLinks($currentPage, $totalPages); ?>
+    </ul>
+    <!-- Pagination END -->
+    <?php
 }
 
 /**

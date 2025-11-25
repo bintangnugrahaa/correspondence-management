@@ -360,26 +360,26 @@ function getSuratData($id_surat)
 function edit_displayNavigationHeader()
 {
     ?>
-        <!-- Row Start -->
-        <div class="row">
-            <!-- Secondary Nav START -->
-            <div class="col s12">
-                <nav class="secondary-nav">
-                    <div class="nav-wrapper blue-grey darken-1">
-                        <ul class="left">
-                            <li class="waves-effect waves-light">
-                                <a href="#" class="judul">
-                                    <i class="material-icons">edit</i> Edit Data Surat Keluar
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </nav>
-            </div>
-            <!-- Secondary Nav END -->
+    <!-- Row Start -->
+    <div class="row">
+        <!-- Secondary Nav START -->
+        <div class="col s12">
+            <nav class="secondary-nav">
+                <div class="nav-wrapper blue-grey darken-1">
+                    <ul class="left">
+                        <li class="waves-effect waves-light">
+                            <a href="#" class="judul">
+                                <i class="material-icons">edit</i> Edit Data Surat Keluar
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
         </div>
-        <!-- Row END -->
-        <?php
+        <!-- Secondary Nav END -->
+    </div>
+    <!-- Row END -->
+    <?php
 }
 
 /**
@@ -427,30 +427,30 @@ function edit_displayAlertMessage($message, $color = 'red')
 function displayEditSuratForm($suratData)
 {
     ?>
-        <!-- Row form Start -->
-        <div class="row jarak-form">
-            <!-- Form START -->
-            <form class="col s12" method="POST" action="?page=tsk&act=edit" enctype="multipart/form-data">
-                <input type="hidden" name="id_surat" value="<?php echo htmlspecialchars($suratData['id_surat']); ?>">
-                <?php displayFormFields($suratData); ?>
-            
-                <div class="row">
-                    <div class="col 6">
-                        <button type="submit" name="submit" class="btn-large blue waves-effect waves-light">
-                            SIMPAN <i class="material-icons">done</i>
-                        </button>
-                    </div>
-                    <div class="col 6">
-                        <a href="?page=tsk" class="btn-large deep-orange waves-effect waves-light">
-                            BATAL <i class="material-icons">clear</i>
-                        </a>
-                    </div>
+    <!-- Row form Start -->
+    <div class="row jarak-form">
+        <!-- Form START -->
+        <form class="col s12" method="POST" action="?page=tsk&act=edit" enctype="multipart/form-data">
+            <input type="hidden" name="id_surat" value="<?php echo htmlspecialchars($suratData['id_surat']); ?>">
+            <?php displayFormFields($suratData); ?>
+
+            <div class="row">
+                <div class="col 6">
+                    <button type="submit" name="submit" class="btn-large blue waves-effect waves-light">
+                        SIMPAN <i class="material-icons">done</i>
+                    </button>
                 </div>
-            </form>
-            <!-- Form END -->
-        </div>
-        <!-- Row form END -->
-        <?php
+                <div class="col 6">
+                    <a href="?page=tsk" class="btn-large deep-orange waves-effect waves-light">
+                        BATAL <i class="material-icons">clear</i>
+                    </a>
+                </div>
+            </div>
+        </form>
+        <!-- Form END -->
+    </div>
+    <!-- Row form END -->
+    <?php
 }
 
 /**
@@ -459,21 +459,21 @@ function displayEditSuratForm($suratData)
 function displayFormFields($suratData)
 {
     ?>
-        <!-- Row in form START -->
-        <div class="row">
-            <?php
-            displayNumberAgendaField($suratData['no_agenda']);
-            displayKodeField($suratData['kode']);
-            displayTujuanField($suratData['tujuan']);
-            displayNoSuratField($suratData['no_surat']);
-            displayTanggalSuratField($suratData['tgl_surat']);
-            displayKeteranganField($suratData['keterangan']);
-            displayIsiField($suratData['isi']);
-            displayFileField($suratData['file']);
-            ?>
-        </div>
-        <!-- Row in form END -->
+    <!-- Row in form START -->
+    <div class="row">
         <?php
+        displayNumberAgendaField($suratData['no_agenda']);
+        displayKodeField($suratData['kode']);
+        displayTujuanField($suratData['tujuan']);
+        displayNoSuratField($suratData['no_surat']);
+        displayTanggalSuratField($suratData['tgl_surat']);
+        displayKeteranganField($suratData['keterangan']);
+        displayIsiField($suratData['isi']);
+        displayFileField($suratData['file']);
+        ?>
+    </div>
+    <!-- Row in form END -->
+    <?php
 }
 
 /**
@@ -556,31 +556,32 @@ function displayIsiField($value)
 function displayFileField($currentFile)
 {
     ?>
-        <div class="input-field col s6">
-            <div class="file-field input-field">
-                <div class="btn light-green darken-1">
-                    <span>File</span>
-                    <input type="file" id="file" name="file">
-                </div>
-                <div class="file-path-wrapper">
-                    <input class="file-path validate" type="text" value="<?php echo htmlspecialchars($currentFile); ?>" 
-                           placeholder="Upload file/scan gambar surat keluar">
-                    <?php
-                    if (isset($_SESSION['errSize'])) {
-                        echo '<div id="alert-message" class="callout bottom z-depth-1 red lighten-4 red-text">' .
-                            htmlspecialchars($_SESSION['errSize']) . '</div>';
-                        unset($_SESSION['errSize']);
-                    }
-                    if (isset($_SESSION['errFormat'])) {
-                        echo '<div id="alert-message" class="callout bottom z-depth-1 red lighten-4 red-text">' .
-                            htmlspecialchars($_SESSION['errFormat']) . '</div>';
-                        unset($_SESSION['errFormat']);
-                    }
-                    ?>
-                    <small class="red-text">*Format file yang diperbolehkan *.JPG, *.PNG, *.DOC, *.DOCX, *.PDF dan ukuran maksimal file 2 MB!</small>
-                </div>
+    <div class="input-field col s6">
+        <div class="file-field input-field">
+            <div class="btn light-green darken-1">
+                <span>File</span>
+                <input type="file" id="file" name="file">
+            </div>
+            <div class="file-path-wrapper">
+                <input class="file-path validate" type="text" value="<?php echo htmlspecialchars($currentFile); ?>"
+                    placeholder="Upload file/scan gambar surat keluar">
+                <?php
+                if (isset($_SESSION['errSize'])) {
+                    echo '<div id="alert-message" class="callout bottom z-depth-1 red lighten-4 red-text">' .
+                        htmlspecialchars($_SESSION['errSize']) . '</div>';
+                    unset($_SESSION['errSize']);
+                }
+                if (isset($_SESSION['errFormat'])) {
+                    echo '<div id="alert-message" class="callout bottom z-depth-1 red lighten-4 red-text">' .
+                        htmlspecialchars($_SESSION['errFormat']) . '</div>';
+                    unset($_SESSION['errFormat']);
+                }
+                ?>
+                <small class="red-text">*Format file yang diperbolehkan *.JPG, *.PNG, *.DOC, *.DOCX, *.PDF dan ukuran
+                    maksimal file 2 MB!</small>
             </div>
         </div>
-        <?php
+    </div>
+    <?php
 }
 ?>
