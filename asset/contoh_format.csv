@@ -3,3 +3,148 @@
 3,C,Kurikulum,Kurikulum 2016
 4,D,Kegiatan,Ekstrakurikuler
 5,E,Administrasi,Administrasi Keuangan
+6,F,Siswa,Penerimaan Peserta Didik Baru
+7,G,Guru,Tenaga Pendidik dan Kependidikan
+8,H,Praktikum,Praktik Kerja Lapangan
+9,I,Sertifikasi,Sertifikasi Kompetensi Siswa
+10,J,Industri,Kemitraan dengan Dunia Usaha
+11,K,Perpustakaan,Perpustakaan dan Sumber Belajar
+12,L,Laboratorium,Laboratorium Komputer
+13,M,Jaringan,Infrastruktur Jaringan Komputer
+14,N,Software,Licensing dan Aplikasi
+15,O,Hardware,Perangkat Keras Komputer
+16,P,Maintenance,Perawatan dan Perbaikan
+17,Q,Keamanan,Sistem Keamanan Sekolah
+18,R,Kesehatan,UKS dan Kesehatan Siswa
+19,S,Olahraga,Sarana Olahraga
+20,T,Kesenian,Kegiatan Seni dan Budaya
+21,U,Perpustakaan,Digital Library
+22,V,Multimedia,Produksi Konten Multimedia
+23,W,Broadcasting,Produksi Siaran
+24,X,Telekomunikasi,Jaringan Telekomunikasi
+25,Y,Robotika,Program Robotika
+26,Z,Internet,Akses Internet dan WiFi
+27,AA,Sertifikasi,ISO 9001:2015
+28,AB,Akreditasi,Akreditasi Sekolah
+29,AC,Supervisi,Monitoring dan Evaluasi
+30,AD,Pengawasan,Internal Quality Control
+31,AE,Assesment,Penilaian Kompetensi
+32,AF,Sertifikasi,Teacher Certification
+33,AG,Workshop,Pelatihan Guru
+34,AH,Seminar,Seminar dan Lokakarya
+35,AI,Konferensi,Konferensi Pendidikan
+36,AJ,Research,Penelitian Tindakan Kelas
+37,AK,Publikasi,Jurnal Ilmiah Sekolah
+38,AL,Inovasi,Program Kreativitas Siswa
+39,AM,Kewirausahaan,Program Kewirausahaan
+40,AN,Magang,Program Magang Industri
+41,AO,Kunjungan,Studi Banding
+42,AP,Pameran,Pameran Karya Siswa
+43,AQ,Lomba,Competition dan Olimpiade
+44,AR,Beasiswa,Bantuan Pendidikan
+45,AS,BOS,Bantuan Operasional Sekolah
+46,AT,Blockgrant,Dana Blockgrant
+47,AU,Sponsorship,Dana Sponsorship
+48,AV,Donasi,Sumbangan Masyarakat
+49,AW,Investasi,Penanaman Modal
+50,AX,Aset,Inventaris Barang
+51,AY,Gedung,Manajemen Gedung
+52,AZ,Ruang,Kelas dan Ruang Belajar
+53,BA,Parkir,Area Parkir Kendaraan
+54,BB,Taman,Lingkungan Hijau Sekolah
+55,BC,Irigasi,Sistem Drainase
+56,BD,Listrik,Manajemen Energi
+57,BE,Air,Manajemen Air Bersih
+58,BF,Sampling,Pengelolaan Sampah
+59,BG,Kantin,Manajemen Kantin
+60,BH,Asrama,Asrama Siswa
+61,BI,Transport,Transportasi Sekolah
+62,BJ,Komunikasi,Sistem Komunikasi Internal
+63,BK,Website,Website dan Portal
+64,BL,Social Media,Media Sosial Sekolah
+65,BM,Newsletter,Buletin Sekolah
+66,BN,Press Release,Siaran Pers
+67,BO,Documentation,Dokumentasi Kegiatan
+68,BP,Archives,Arsip Sekolah
+69,BQ,Legal,Aspek Hukum dan Peraturan
+70,BR,Perizinan,Izin Operasional
+71,BS,Perjanjian,MoU dan Kerjasama
+72,BT,Hak Cipta,Intellectual Property
+73,BU,Data,Protection Data Pribadi
+74,BV,Kode Etik,Etika dan Perilaku
+75,BW,Tata Tertib,Peraturan Sekolah
+76,BX,Sanksi,Penegakan Disiplin
+77,BY,Penghargaan,Reward System
+78,BZ,Graduation,Wisuda dan Kelulusan
+79,CA,Alumni,Hubungan Alumni
+80,CB,Career,Bursa Kerja
+81,CC,Placement,Penempatan Kerja
+82,CD,Tracer Study,Studi Lanjutan Alumni
+83,CE,Networking,Jejaring Industri
+84,CF,Job Fair,Pameran Pekerjaan
+85,CG,Training,Pelatihan Kerja
+86,CH,Certification,Sertifikasi Profesi
+87,CI,Apprenticeship,Program Pemagangan
+88,CJ,Entrepreneur,Wirausaha Mandiri
+89,CK,Startup,Incubator Bisnis
+90,CL,Technology,Transfer Teknologi
+91,CM,Innovation,Pusat Inovasi
+92,CN,Research,Riset Terapan
+93,CO,Development,Pengembangan Produk
+94,CP,Production,Produksi Massal
+95,CQ,Quality,Control Kualitas
+96,CR,Standardization,Standardisasi
+97,CS,Testing,Pengujian Produk
+98,CT,Calibration,Kalibrasi Alat
+99,CU,Maintenance,Perawatan Peralatan
+100,CV,Safety,Keselamatan Kerja
+101,CW,Environment,Management Lingkungan
+102,CX,Energy,Manajemen Energi
+103,CY,Waste,Pengolahan Limbah
+104,CZ,Recycling,Program Daur Ulang
+105,DA,Green,Program Go Green
+106,DB,CSR,Corporate Social Responsibility
+107,DC,Community,Pengabdian Masyarakat
+108,DD,Social,Kegiatan Sosial
+109,DE,Charity,Aksi Amal
+110,DF,Volunteer,Sukarelawan
+111,DG,Disaster,Penanganan Bencana
+112,DH,Emergency,Tanggap Darurat
+113,DI,Security,Keamanan Lingkungan
+114,DJ,Health,Kesehatan Masyarakat
+115,DK,Education,Pendidikan Masyarakat
+116,DL,Training,Pelatihan Komunitas
+117,DM,Workshop,Lokakarya Masyarakat
+118,DN,Outreach,Program Outreach
+119,DO,Partnership,Kemitraan Lokal
+120,DP,Development,Pengembangan Wilayah
+121,DQ,Infrastructure,Infrastruktur Publik
+122,DR,Facility,Fasilitas Umum
+123,DS,Utility,Pelayanan Umum
+124,DT,Service,Layanan Masyarakat
+125,DU,Support,Pendukung Operasional
+126,DV,Logistics,Manajemen Logistik
+127,DW,Procurement,Pengadaan Barang
+128,DX,Inventory,Manajemen Persediaan
+129,DY,Distribution,Distribusi Barang
+130,DZ,Transport,Manajemen Transportasi
+131,EA,Warehouse,Gudang Penyimpanan
+132,EB,Equipment,Peralatan dan Mesin
+133,EC,Tools,Alat dan Perkakas
+134,ED,Materials,Bahan dan Material
+135,EE,Supplies,Perlengkapan Kantor
+136,EF,Consumables,Bahan Habis Pakai
+137,EG,Spareparts,Suku Cadang
+138,EH,Maintenance,Perawatan Rutin
+139,EI,Repair,Perbaikan Kerusakan
+140,EJ,Calibration,Kalibrasi Periodik
+141,EK,Inspection,Inspeksi Berkala
+142,EL,Testing,Pengujian Fungsional
+143,EM,Quality,Assurance Kualitas
+144,EN,Standard,Prosedur Standar
+145,EO,Documentation,Dokumentasi Teknis
+146,EP,Manual,Buku Panduan
+147,EQ,Guide,Pedoman Operasional
+148,ER,Procedure,Prosedur Kerja
+149,ES,Instruction,Instruksi Kerja
+150,ET,Checklist,Formulir Pemeriksaan
