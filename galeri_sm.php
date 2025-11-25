@@ -1,262 +1,360 @@
 <?php
-//cek session
+// Check session
 if (empty($_SESSION['admin'])) {
     $_SESSION['err'] = '<center>Anda harus login terlebih dahulu!</center>';
     header("Location: ./");
-    die();
+    exit();
+}
+
+if (isset($_REQUEST['act'])) {
+    handleAction($_REQUEST['act']);
 } else {
+    displayGaleriPage();
+}
 
-    if (isset($_REQUEST['act'])) {
-        $act = $_REQUEST['act'];
-        switch ($act) {
-            case 'fsm':
-                include "file_sm.php";
-                break;
-        }
+/**
+ * Handle actions
+ */
+function handleAction($action)
+{
+    if ($action === 'fsm') {
+        include "file_sm.php";
+        exit();
+    }
+}
+
+/**
+ * Display galeri page
+ */
+function displayGaleriPage()
+{
+    displayNavigationHeader();
+
+    if (isset($_REQUEST['submit'])) {
+        displayFilteredResults();
     } else {
+        displayDefaultResults();
+    }
+}
 
-        //pagging
-        $limit = 8;
-        $pg = @$_GET['pg'];
-        if (empty($pg)) {
-            $curr = 0;
-            $pg = 1;
-        } else {
-            $curr = ($pg - 1) * $limit;
-        }
-
-        echo '
-                    <!-- Row Start -->
-                    <div class="row">
-                        <!-- Secondary Nav START -->
-                        <div class="col s12">
-                            <div class="z-depth-1">
-                                <nav class="secondary-nav">
-                                    <div class="nav-wrapper blue-grey darken-1">
-                                        <div class="col m12">
-                                            <ul class="left">
-                                                <li class="waves-effect waves-light"><a href="?page=gsm" class="judul"><i class="material-icons">image</i> Galeri File Surat Masuk</a></li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </nav>
-                            </div>
+/**
+ * Display navigation header
+ */
+function displayNavigationHeader()
+{
+    echo '
+    <!-- Row Start -->
+    <div class="row">
+        <!-- Secondary Nav START -->
+        <div class="col s12">
+            <div class="z-depth-1">
+                <nav class="secondary-nav">
+                    <div class="nav-wrapper blue-grey darken-1">
+                        <div class="col m12">
+                            <ul class="left">
+                                <li class="waves-effect waves-light">
+                                    <a href="?page=gsm" class="judul">
+                                        <i class="material-icons">image</i> Galeri File Surat Masuk
+                                    </a>
+                                </li>
+                            </ul>
                         </div>
-                        <!-- Secondary Nav END -->
                     </div>
-                    <!-- Row END -->
+                </nav>
+            </div>
+        </div>
+        <!-- Secondary Nav END -->
+    </div>
+    <!-- Row END -->';
+}
 
-                    <!-- Row form Start -->
-                    <div class="row jarak-form">';
+/**
+ * Display filtered results based on date range
+ */
+function displayFilteredResults()
+{
+    global $config;
 
-        if (isset($_REQUEST['submit'])) {
+    $dari_tanggal = $_REQUEST['dari_tanggal'];
+    $sampai_tanggal = $_REQUEST['sampai_tanggal'];
 
-            $dari_tanggal = $_REQUEST['dari_tanggal'];
-            $sampai_tanggal = $_REQUEST['sampai_tanggal'];
+    // Validate date range
+    if (empty($dari_tanggal) || empty($sampai_tanggal)) {
+        header("Location: ./admin.php?page=gsm");
+        exit();
+    }
 
-            if ($_REQUEST['dari_tanggal'] == "" || $_REQUEST['sampai_tanggal'] == "") {
-                header("Location: ./admin.php?page=gsm");
-                die();
-            } else {
+    displayDateFilterForm($dari_tanggal, $sampai_tanggal, true);
+    displayFilterHeader($dari_tanggal, $sampai_tanggal);
+    displaySuratFiles($dari_tanggal, $sampai_tanggal, true);
+}
 
-                $query = mysqli_query($config, "SELECT * FROM tbl_surat_masuk WHERE tgl_diterima BETWEEN '$dari_tanggal' AND '$sampai_tanggal' ORDER By id_surat DESC LIMIT 10");
+/**
+ * Display default results with pagination
+ */
+function displayDefaultResults()
+{
+    global $config;
 
-                echo '<!-- Row form Start -->
-                            <div class="row jarak-form black-text">
-                                <form class="col s12" method="post" action="">
-                                    <div class="input-field col s3">
-                                        <i class="material-icons prefix md-prefix">date_range</i>
-                                        <input id="dari_tanggal" type="text" name="dari_tanggal" id="dari_tanggal" required>
-                                        <label for="dari_tanggal">Dari Tanggal</label>
-                                    </div>
-                                    <div class="input-field col s3">
-                                        <i class="material-icons prefix md-prefix">date_range</i>
-                                        <input id="sampai_tanggal" type="text" name="sampai_tanggal" id="sampai_tanggal" required>
-                                        <label for="sampai_tanggal">Sampai Tanggal</label>
-                                    </div>
-                                    <div class="col s6">
-                                        <button type="submit" name="submit" class="btn-large blue waves-effect waves-light"> FILTER <i class="material-icons">filter_list</i></button>&nbsp;&nbsp;
+    $limit = 8;
+    $currentPage = getCurrentPage();
+    $offset = ($currentPage - 1) * $limit;
 
-                                        <button type="reset" onclick="window.history.back()" class="btn-large deep-orange waves-effect waves-light">RESET <i class="material-icons">refresh</i></button>
-                                    </div>
-                                </form>
-                            </div>
-                            <!-- Row form END -->
+    displayDateFilterForm();
+    displaySuratFiles(null, null, false, $offset, $limit);
+    displayPagination($limit);
+}
 
-                            <div class="row agenda">
-                                <div class="col s12"> <p class="warna agenda">Galeri file surat masuk antara tanggal <strong>' . indoDate($dari_tanggal) . '</strong> sampai dengan tanggal <strong>' . indoDate($sampai_tanggal) . '</strong></p>
-                                </div>
-                            </div>';
+/**
+ * Get current page number
+ */
+function getCurrentPage()
+{
+    return isset($_GET['pg']) ? max(1, (int) $_GET['pg']) : 1;
+}
 
-                if (mysqli_num_rows($query) > 0) {
-                    while ($row = mysqli_fetch_array($query)) {
-                        if (empty($row['file'])) {
-                            echo '';
-                        } else {
+/**
+ * Display date filter form
+ */
+function displayDateFilterForm($dari_tanggal = '', $sampai_tanggal = '', $isFiltered = false)
+{
+    $resetButton = $isFiltered ? '
+        <button type="reset" onclick="window.history.back()" class="btn-large deep-orange waves-effect waves-light">
+            RESET <i class="material-icons">refresh</i>
+        </button>' : '';
 
-                            $ekstensi = array('jpg', 'png', 'jpeg');
-                            $ekstensi2 = array('doc', 'docx');
-                            $file = $row['file'];
-                            $x = explode('.', $file);
-                            $eks = strtolower(end($x));
+    echo '
+    <!-- Row form Start -->
+    <div class="row jarak-form black-text">
+        <form class="col s12" method="post" action="">
+            <div class="input-field col s3">
+                <i class="material-icons prefix md-prefix">date_range</i>
+                <input id="dari_tanggal" type="text" name="dari_tanggal" class="datepicker" value="' . htmlspecialchars($dari_tanggal) . '" required>
+                <label for="dari_tanggal">Dari Tanggal</label>
+            </div>
+            <div class="input-field col s3">
+                <i class="material-icons prefix md-prefix">date_range</i>
+                <input id="sampai_tanggal" type="text" name="sampai_tanggal" class="datepicker" value="' . htmlspecialchars($sampai_tanggal) . '" required>
+                <label for="sampai_tanggal">Sampai Tanggal</label>
+            </div>
+            <div class="col s6">
+                <button type="submit" name="submit" class="btn-large blue waves-effect waves-light">
+                    FILTER <i class="material-icons">filter_list</i>
+                </button>
+                ' . $resetButton . '
+            </div>
+        </form>
+    </div>
+    <!-- Row form END -->';
+}
 
-                            if (in_array($eks, $ekstensi) == true) {
-                                echo '
-                                            <div class="col m3">
-                                                <img class="galeri materialboxed" data-caption="' . indoDate($row['tgl_diterima']) . '" src="./upload/surat_masuk/' . $row['file'] . '"/>
-                                                <a class="btn light-green darken-1" href="?page=gsm&act=fsm&id_surat=' . $row['id_surat'] . '">Tampilkan Ukuran Penuh</a>
-                                            </div>';
-                            } else {
+/**
+ * Display filter header
+ */
+function displayFilterHeader($dari_tanggal, $sampai_tanggal)
+{
+    echo '
+    <div class="row agenda">
+        <div class="col s12">
+            <p class="warna agenda">
+                Galeri file surat masuk antara tanggal 
+                <strong>' . indoDate($dari_tanggal) . '</strong> 
+                sampai dengan tanggal 
+                <strong>' . indoDate($sampai_tanggal) . '</strong>
+            </p>
+        </div>
+    </div>';
+}
 
-                                if (in_array($eks, $ekstensi2) == true) {
-                                    echo '
-                                                <div class="col m3">
-                                                    <img class="galeri materialboxed" data-caption="' . indoDate($row['tgl_diterima']) . '" src="./asset/img/word.png"/>
-                                                    <a class="btn light-green darken-1" href="?page=gsm&act=fsm&id_surat=' . $row['id_surat'] . '">Lihat Detail File</a>
-                                                </div>';
-                                } else {
-                                    echo '
-                                                <div class="col m3">
-                                                    <img class="galeri materialboxed" data-caption="' . indoDate($row['tgl_diterima']) . '" src="./asset/img/pdf.png"/>
-                                                    <a class="btn light-green darken-1" href="?page=gsm&act=fsm&id_surat=' . $row['id_surat'] . '">Lihat Detail File</a>
-                                                </div>';
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    echo '<div class="col m12">
-                                        <div class="card blue lighten-5">
-                                            <div class="card-content notif">
-                                                <span class="card-title lampiran"><center>Tidak ada file lampiran surat masuk yang ditemukan</center></span>
-                                            </div>
-                                        </div>
-                                    </div>';
-                }
-                echo '
-                            </div>';
-            }
-        } else {
+/**
+ * Display surat files
+ */
+function displaySuratFiles($dari_tanggal = null, $sampai_tanggal = null, $isFiltered = false, $offset = 0, $limit = 8)
+{
+    global $config;
 
-            //script untuk menampilkan data
-            $query = mysqli_query($config, "SELECT * FROM tbl_surat_masuk ORDER BY id_surat DESC LIMIT $curr, $limit");
-            if (mysqli_num_rows($query) > 0) {
+    $query = getSuratMasukQuery($dari_tanggal, $sampai_tanggal, $isFiltered, $offset, $limit);
 
-                echo '
-                            <!-- Row form Start -->
-                            <div class="row jarak-form black-text">
-                                <form class="col s12" method="post" action="">
-                                    <div class="input-field col s3">
-                                        <i class="material-icons prefix md-prefix">date_range</i>
-                                        <input id="dari_tanggal" type="text" name="dari_tanggal" id="dari_tanggal" required>
-                                        <label for="dari_tanggal">Dari Tanggal</label>
-                                    </div>
-                                    <div class="input-field col s3">
-                                        <i class="material-icons prefix md-prefix">date_range</i>
-                                        <input id="sampai_tanggal" type="text" name="sampai_tanggal" id="sampai_tanggal" required>
-                                        <label for="sampai_tanggal">Sampai Tanggal</label>
-                                    </div>
-                                    <div class="col s6">
-                                        <button type="submit" name="submit" class="btn-large blue waves-effect waves-light">FILTER <i class="material-icons">filter_list</i></button>
-                                    </div>
-                                </form>
-                            </div>
-                            <!-- Row form END -->';
+    if (!$query || mysqli_num_rows($query) == 0) {
+        displayNoFilesMessage($isFiltered);
+        return;
+    }
 
-                while ($row = mysqli_fetch_array($query)) {
+    echo '<div class="row jarak-form">';
 
-                    if (empty($row['file'])) {
-                        echo '';
-                    } else {
-
-                        $ekstensi = array('jpg', 'png', 'jpeg');
-                        $ekstensi2 = array('doc', 'docx');
-                        $file = $row['file'];
-                        $x = explode('.', $file);
-                        $eks = strtolower(end($x));
-
-                        if (in_array($eks, $ekstensi) == true) {
-                            echo '
-                                        <div class="col m3">
-                                            <img class="galeri materialboxed" data-caption="' . indoDate($row['tgl_diterima']) . '" src="./upload/surat_masuk/' . $row['file'] . '"/>
-                                            <a class="btn light-green darken-1" href="?page=gsm&act=fsm&id_surat=' . $row['id_surat'] . '">Tampilkan Ukuran Penuh</a>
-                                        </div>';
-                        } else {
-
-                            if (in_array($eks, $ekstensi2) == true) {
-                                echo '
-                                            <div class="col m3">
-                                                <img class="galeri materialboxed" data-caption="' . indoDate($row['tgl_diterima']) . '" src="./asset/img/word.png"/>
-                                                <a class="btn light-green darken-1" href="?page=gsm&act=fsm&id_surat=' . $row['id_surat'] . '">Lihat Detail File</a>
-                                            </div>';
-                            } else {
-                                echo '
-                                                <div class="col m3">
-                                                    <img class="galeri materialboxed" data-caption="' . indoDate($row['tgl_diterima']) . '" src="./asset/img/pdf.png"/>
-                                                    <a class="btn light-green darken-1" href="?page=gsm&act=fsm&id_surat=' . $row['id_surat'] . '">Lihat Detail File</a>
-                                                </div>';
-                            }
-                        }
-                    }
-                }
-            } else {
-                echo '
-                                <div class="col m12">
-                                    <div class="card blue lighten-5">
-                                        <div class="card-content notif">
-                                            <span class="card-title lampiran"><center>Tidak ada data untuk ditampilkan</center></span>
-                                        </div>
-                                    </div>
-                                </div>';
-            }
-            echo '
-                        </div>';
-
-            $query = mysqli_query($config, "SELECT * FROM tbl_surat_masuk");
-            $cdata = mysqli_num_rows($query);
-            $cpg = ceil($cdata / $limit);
-
-            echo '<!-- Pagination START -->
-                              <ul class="pagination">';
-
-            if ($cdata > $limit) {
-
-                //first and previous pagging
-                if ($pg > 1) {
-                    $prev = $pg - 1;
-                    echo '<li><a href="?page=gsm&pg=1"><i class="material-icons md-48">first_page</i></a></li>
-                                  <li><a href="?page=gsm&pg=' . $prev . '"><i class="material-icons md-48">chevron_left</i></a></li>';
-                } else {
-                    echo '<li class="disabled"><a href=""><i class="material-icons md-48">first_page</i></a></li>
-                                  <li class="disabled"><a href=""><i class="material-icons md-48">chevron_left</i></a></li>';
-                }
-
-                //perulangan pagging
-                for ($i = 1; $i <= $cpg; $i++) {
-                    if ((($i >= $pg - 3) && ($i <= $pg + 3)) || ($i == 1) || ($i == $cpg)) {
-                        if ($i == $pg)
-                            echo '<li class="active waves-effect waves-dark"><a href="?page=gsm&pg=' . $i . '"> ' . $i . ' </a></li>';
-                        else
-                            echo '<li class="waves-effect waves-dark"><a href="?page=gsm&pg=' . $i . '"> ' . $i . ' </a></li>';
-                    }
-                }
-
-                //last and next pagging
-                if ($pg < $cpg) {
-                    $next = $pg + 1;
-                    echo '<li><a href="?page=gsm&pg=' . $next . '"><i class="material-icons md-48">chevron_right</i></a></li>
-                                  <li><a href="?page=gsm&pg=' . $cpg . '"><i class="material-icons md-48">last_page</i></a></li>';
-                } else {
-                    echo '<li class="disabled"><a href=""><i class="material-icons md-48">chevron_right</i></a></li>
-                                  <li class="disabled"><a href=""><i class="material-icons md-48">last_page</i></a></li>';
-                }
-                echo '
-                        </ul>
-                        <!-- Pagination END -->';
-            } else {
-                echo '';
-            }
+    while ($row = mysqli_fetch_assoc($query)) {
+        if (!empty($row['file'])) {
+            displayFileCard($row);
         }
+    }
+
+    echo '</div>';
+}
+
+/**
+ * Get surat masuk query based on parameters
+ */
+function getSuratMasukQuery($dari_tanggal, $sampai_tanggal, $isFiltered, $offset, $limit)
+{
+    global $config;
+
+    $sql = "SELECT * FROM tbl_surat_masuk WHERE file != ''";
+
+    if ($isFiltered && $dari_tanggal && $sampai_tanggal) {
+        $dari_tanggal = mysqli_real_escape_string($config, $dari_tanggal);
+        $sampai_tanggal = mysqli_real_escape_string($config, $sampai_tanggal);
+        $sql .= " AND tgl_diterima BETWEEN '$dari_tanggal' AND '$sampai_tanggal' 
+                 ORDER BY id_surat DESC 
+                 LIMIT 10";
+    } else {
+        $sql .= " ORDER BY id_surat DESC 
+                 LIMIT $offset, $limit";
+    }
+
+    return mysqli_query($config, $sql);
+}
+
+/**
+ * Display no files message
+ */
+function displayNoFilesMessage($isFiltered)
+{
+    $message = $isFiltered ?
+        'Tidak ada file lampiran surat masuk yang ditemukan' :
+        'Tidak ada data untuk ditampilkan';
+
+    echo '
+    <div class="col m12">
+        <div class="card blue lighten-5">
+            <div class="card-content notif">
+                <span class="card-title lampiran">
+                    <center>' . $message . '</center>
+                </span>
+            </div>
+        </div>
+    </div>';
+}
+
+/**
+ * Display file card
+ */
+function displayFileCard($row)
+{
+    $fileInfo = getFileInfo($row['file']);
+    $imageSrc = getImageSource($fileInfo['extension'], $row['file']);
+    $buttonText = getButtonText($fileInfo['extension']);
+
+    echo '
+    <div class="col m3">
+        <img class="galeri materialboxed" 
+             data-caption="' . indoDate($row['tgl_diterima']) . '" 
+             src="' . $imageSrc . '"/>
+        <a class="btn light-green darken-1" 
+           href="?page=gsm&act=fsm&id_surat=' . $row['id_surat'] . '">
+           ' . $buttonText . '
+        </a>
+    </div>';
+}
+
+/**
+ * Get file information
+ */
+function getFileInfo($filename)
+{
+    $fileParts = explode('.', $filename);
+    return [
+        'extension' => strtolower(end($fileParts))
+    ];
+}
+
+/**
+ * Get image source based on file type
+ */
+function getImageSource($extension, $filename)
+{
+    $imageExtensions = ['jpg', 'png', 'jpeg'];
+    $documentExtensions = ['doc', 'docx'];
+
+    if (in_array($extension, $imageExtensions)) {
+        return './upload/surat_masuk/' . htmlspecialchars($filename);
+    } elseif (in_array($extension, $documentExtensions)) {
+        return './asset/img/word.png';
+    } else {
+        return './asset/img/pdf.png';
+    }
+}
+
+/**
+ * Get button text based on file type
+ */
+function getButtonText($extension)
+{
+    $imageExtensions = ['jpg', 'png', 'jpeg'];
+
+    if (in_array($extension, $imageExtensions)) {
+        return 'Tampilkan Ukuran Penuh';
+    } else {
+        return 'Lihat Detail File';
+    }
+}
+
+/**
+ * Display pagination
+ */
+function displayPagination($limit)
+{
+    global $config;
+
+    $query = mysqli_query($config, "SELECT COUNT(*) as total FROM tbl_surat_masuk WHERE file != ''");
+    $row = mysqli_fetch_assoc($query);
+    $totalRecords = $row['total'];
+    $totalPages = ceil($totalRecords / $limit);
+    $currentPage = getCurrentPage();
+
+    if ($totalRecords <= $limit) {
+        return;
+    }
+
+    echo '<!-- Pagination START -->
+          <ul class="pagination">';
+
+    displayPaginationLinks($currentPage, $totalPages);
+
+    echo '</ul>
+          <!-- Pagination END -->';
+}
+
+/**
+ * Display pagination links
+ */
+function displayPaginationLinks($currentPage, $totalPages)
+{
+    // First and previous buttons
+    if ($currentPage > 1) {
+        $prev = $currentPage - 1;
+        echo '<li><a href="?page=gsm&pg=1"><i class="material-icons md-48">first_page</i></a></li>
+              <li><a href="?page=gsm&pg=' . $prev . '"><i class="material-icons md-48">chevron_left</i></a></li>';
+    } else {
+        echo '<li class="disabled"><a href=""><i class="material-icons md-48">first_page</i></a></li>
+              <li class="disabled"><a href=""><i class="material-icons md-48">chevron_left</i></a></li>';
+    }
+
+    // Page numbers
+    for ($i = 1; $i <= $totalPages; $i++) {
+        if (($i >= $currentPage - 3 && $i <= $currentPage + 3) || $i == 1 || $i == $totalPages) {
+            $activeClass = $i == $currentPage ? 'active waves-effect waves-dark' : 'waves-effect waves-dark';
+            echo '<li class="' . $activeClass . '"><a href="?page=gsm&pg=' . $i . '">' . $i . '</a></li>';
+        }
+    }
+
+    // Next and last buttons
+    if ($currentPage < $totalPages) {
+        $next = $currentPage + 1;
+        echo '<li><a href="?page=gsm&pg=' . $next . '"><i class="material-icons md-48">chevron_right</i></a></li>
+              <li><a href="?page=gsm&pg=' . $totalPages . '"><i class="material-icons md-48">last_page</i></a></li>';
+    } else {
+        echo '<li class="disabled"><a href=""><i class="material-icons md-48">chevron_right</i></a></li>
+              <li class="disabled"><a href=""><i class="material-icons md-48">last_page</i></a></li>';
     }
 }
 ?>
